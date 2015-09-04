@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_alu.v
 //  Created On    : Thu Sep  3 09:14:03 2015
-//  Last Modified : Fri Sep 04 11:15:52 2015
+//  Last Modified : Fri Sep 04 11:24:22 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -135,8 +135,8 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
             `ALU_OP_A    : ex_alu_result = ex_alu_port_a;
             `ALU_OP_B    : ex_alu_result = ex_alu_port_b;
             default      : ex_alu_result = 32'bx;
-        endcase
-    end
+        endcase // case (ex_alu_operation)
+    end // always @ (*)
 
     //--------------------------------------------------------------------------
     // Detect Overflow
@@ -146,7 +146,7 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
             `ALU_OP_ADD : exc_overflow = ((A[31] ~^ B[31]) & (A[31] ^ add_sub_result[31]));
             `ALU_OP_SUB : exc_overflow = ((A[31]  ^ B[31]) & (A[31] ^ add_sub_result[31]));
             default     : exc_overflow = 1'b0;
-        endcase
+        endcase // case (ex_alu_operation)
     end
 
     //--------------------------------------------------------------------------
@@ -176,16 +176,16 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
                 `ALU_OP_MSUB    : hilo <= hilo - mult_result;
                 `ALU_OP_MSUBU   : hilo <= hilo - mult_result;
                 default         : hilo <= hilo;
-            endcase
-        end // if (enable_ex)
+            endcase // case (ex_alu_operation)
+        end // if (enable_ex & mult_ready)
         else if (enable_ex) begin
             case (ex_alu_operation)
                 `ALU_OP_MTHI    : hilo <= {A, lo};
                 `ALU_OP_MTLO    : hilo <= {hi, A};
                 default         : hilo <= hilo;
-            endcase
+            endcase // case (ex_alu_operation)
         end
-    end
+    end // always @ (posedge clk)
 
     //--------------------------------------------------------------------------
     // Check if the div unit is currently active
@@ -202,9 +202,9 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
             case(div_active)
                 1'd0 : div_active <= (op_divs || op_divu) ? 1'b1 : 1'b0;
                 1'd1 : div_active <= (~div_stall) ? 1'b0 : 1'b1;
-            endcase
-        end
-    end
+            endcase // case (div_active)
+        end // else: !if(rst)
+    end // always @ (posedge clk)
 
     //--------------------------------------------------------------------------
     // Count Leading Ones/Zeros
@@ -218,7 +218,7 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
                               .clz_result       (clz_result[5:0]),
                               // Inputs
                               .A                (A[31:0]));
-        end // if (ENABLE_HW_CLOZ)
+        end
         // Disable
         else begin
             always begin
@@ -262,13 +262,13 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
                                     .mult_signed_op     (mult_signed_op),
                                     .mult_enable_op     (mult_enable_op),
                                     .mult_stall         (mult_stall));
-        end
+        end // if (ENABLE_HW_MULT)
         //  No hardware multiplier
         else begin
             assign mult_result  = 64'h0;    // disabled
             assign mult_active  = 1'b0;     // disabled
             assign mult_ready   = 1'b0;     // disabled
-        end
+        end // else: !if(ENABLE_HW_MULT)
     endgenerate
 
     //--------------------------------------------------------------------------
@@ -289,13 +289,13 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
                                     .op_divu            (op_divu),
                                     .dividend           (dividend[31:0]),
                                     .divisor            (divisor[31:0]));
-        end
+        end // if (ENABLE_HW_DIV)
         // No hardware divider
         else begin
             assign quotient  = 32'h0;   // disabled
             assign remainder = 32'h0;   // disabled
             assign div_stall = 1'b0;    // disabled
-        end
+        end // else: !if(ENABLE_HW_DIV)
     endgenerate
 
 endmodule // antares_alu
