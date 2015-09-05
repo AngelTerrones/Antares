@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_defines.v
 //  Created On    : Mon Aug 31 19:32:04 2015
-//  Last Modified : Mon Aug 31 21:45:57 2015
+//  Last Modified : Fri Sep 04 21:06:49 2015
 //  Revision      : 0.1
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -270,123 +270,6 @@
 
 //------------------------------------------------------------------------------
 /*
-    Datapath controls.
-    All signals are active High.
-    ----------------------------------------------------------------------------
-        Bit     Name                Description
-    ----------------------------------------------------------------------------
-        20 :    id_alu_operation        Operation to execute.
-        19 :    .
-        18 :    .
-        17 :    .
-        16 :    .
-        -------------------------------
-        15:     id_trap                 Trap instruction
-        14:     id_trap_condition       Condition: ALU result = 0 (0), ALU result != 0 (1)
-        -------------------------------
-        13 :    id_gpr_we               Write enable (GPR)
-        12 :    id_mem_to_gpr_select    Select data: ALU(0), MEM(1)
-        -------------------------------
-        11 :    id_alu_port_a_select    Select: Rs(0), shamt(1), 0x04(2), 0x10(3)
-        10 :    .
-        9  :    id_alu_port_b_select    Select: Rt(0), S/ZImm16(1), PCAdd4(2), CP0(3)
-        8  :    .
-        7  :    id_gpr_wa_select        Select register: Rd(0), Rt(1), 31(2)
-        6  :    .
-        -------------------------------
-        5  :    id_jump                 Jump instruction
-        4  :    id_branch               Branch instruction
-        -------------------------------
-        3  :    id_mem_write            Write to data memory
-        2  :    id_mem_byte             Enable read/write one byte
-        1  :    id_mem_halfword         Enable read/write 2 bytes (16 bits data)
-        0  :    id_mem_data_sign_ext    Zero extend data (0) or Sign extend data (1)
-    ----------------------------------------------------------------------------
-*/
-//------------------------------------------------------------------------------
-`define DP_NONE        {`ALU_OP_AND,  16'b00_00_000000_00_0000}
-`define DP_ADD         {`ALU_OP_ADD,  16'b00_10_000000_00_0000}
-`define DP_ADDI        {`ALU_OP_ADD,  16'b00_10_000101_00_0000}
-`define DP_ADDIU       {`ALU_OP_ADDU, 16'b00_10_000101_00_0000}
-`define DP_ADDU        {`ALU_OP_ADDU, 16'b00_10_000000_00_0000}
-`define DP_AND         {`ALU_OP_AND,  16'b00_10_000000_00_0000}
-`define DP_ANDI        {`ALU_OP_AND,  16'b00_10_000101_00_0000}
-`define DP_BEQ         {`ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BGEZ        {`ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BGEZAL      {`ALU_OP_ADD,  16'b00_10_101010_01_0000}
-`define DP_BGTZ        {`ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BLEZ        {`ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BLTZ        {`ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BLTZAL      {`ALU_OP_ADD,  16'b00_10_101010_01_0000}
-`define DP_BNE         {`ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BREAK       {`ALU_OP_AND,  16'b00_00_000000_00_0000}
-`define DP_CLO         {`ALU_OP_CLO,  16'b00_10_000000_00_0000}
-`define DP_CLZ         {`ALU_OP_CLZ,  16'b00_10_000000_00_0000}
-`define DP_DIV         {`ALU_OP_DIV,  16'b00_00_000000_00_0000}
-`define DP_DIVU        {`ALU_OP_DIVU, 16'b00_00_000000_00_0000}
-`define DP_ERET        {`ALU_OP_AND,  16'b00_00_000000_00_0000}
-`define DP_J           {`ALU_OP_AND,  16'b00_00_000000_10_0000}
-`define DP_JAL         {`ALU_OP_ADD,  16'b00_10_101010_10_0000}
-`define DP_JALR        {`ALU_OP_ADD,  16'b00_10_101010_01_0000}
-`define DP_JR          {`ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_LB          {`ALU_OP_ADDU, 16'b00_11_000101_00_0101}
-`define DP_LBU         {`ALU_OP_ADDU, 16'b00_11_000101_00_0100}
-`define DP_LH          {`ALU_OP_ADDU, 16'b00_11_000101_00_0011}
-`define DP_LHU         {`ALU_OP_ADDU, 16'b00_11_000101_00_0010}
-`define DP_LL          {`ALU_OP_ADDU, 16'b00_11_000101_00_0000}
-`define DP_LUI         {`ALU_OP_SLL,  16'b00_10_110101_00_0000}
-`define DP_LW          {`ALU_OP_ADDU, 16'b00_11_000101_00_0000}
-`define DP_MADD        {`ALU_OP_MADD, 16'b00_00_000000_00_0000}
-`define DP_MADDU       {`ALU_OP_MADDU,16'b00_00_000000_00_0000}
-`define DP_MFC0        {`ALU_OP_B,    16'b00_10_001101_00_0000}
-`define DP_MFHI        {`ALU_OP_MFHI, 16'b00_10_000000_00_0000}
-`define DP_MFLO        {`ALU_OP_MFLO, 16'b00_10_000000_00_0000}
-`define DP_MOVN        {`ALU_OP_A,    16'b00_00_000000_00_0000}
-`define DP_MOVZ        {`ALU_OP_A,    16'b00_00_000000_00_0000}
-`define DP_MSUB        {`ALU_OP_MSUB, 16'b00_00_000000_00_0000}
-`define DP_MSUBU       {`ALU_OP_MSUBU,16'b00_00_000000_00_0000}
-`define DP_MTC0        {`ALU_OP_AND,  16'b00_00_000000_00_0000}
-`define DP_MTHI        {`ALU_OP_MTHI, 16'b00_00_000000_00_0000}
-`define DP_MTLO        {`ALU_OP_MTLO, 16'b00_00_000000_00_0000}
-`define DP_MULT        {`ALU_OP_MULS, 16'b00_00_000000_00_0000}
-`define DP_MULTU       {`ALU_OP_MULU, 16'b00_00_000000_00_0000}
-`define DP_NOR         {`ALU_OP_NOR,  16'b00_10_000000_00_0000}
-`define DP_OR          {`ALU_OP_OR,   16'b00_10_000000_00_0000}
-`define DP_ORI         {`ALU_OP_OR,   16'b00_10_000101_00_0000}
-`define DP_SB          {`ALU_OP_ADDU, 16'b00_00_000100_00_1100}
-`define DP_SC          {`ALU_OP_ADDU, 16'b00_11_000101_00_1000}
-`define DP_SH          {`ALU_OP_ADDU, 16'b00_00_000100_00_1010}
-`define DP_SLL         {`ALU_OP_SLL,  16'b00_10_010000_00_0000}
-`define DP_SLLV        {`ALU_OP_SLL,  16'b00_10_000000_00_0000}
-`define DP_SLT         {`ALU_OP_SLT,  16'b00_10_000000_00_0000}
-`define DP_SLTI        {`ALU_OP_SLT,  16'b00_10_000101_00_0000}
-`define DP_SLTIU       {`ALU_OP_SLTU, 16'b00_10_000101_00_0000}
-`define DP_SLTU        {`ALU_OP_SLTU, 16'b00_10_000000_00_0000}
-`define DP_SRA         {`ALU_OP_SRA,  16'b00_10_010000_00_0000}
-`define DP_SRAV        {`ALU_OP_SRA,  16'b00_10_000000_00_0000}
-`define DP_SRL         {`ALU_OP_SRL,  16'b00_10_010000_00_0000}
-`define DP_SRLV        {`ALU_OP_SRL,  16'b00_10_000000_00_0000}
-`define DP_SUB         {`ALU_OP_SUB,  16'b00_10_000000_00_0000}
-`define DP_SUBU        {`ALU_OP_SUBU, 16'b00_10_000000_00_0000}
-`define DP_SW          {`ALU_OP_ADDU, 16'b00_00_000100_00_1000}
-`define DP_SYSCALL     {`ALU_OP_ADDU, 16'b00_00_000000_00_0000}
-`define DP_TEQ         {`ALU_OP_SUBU, 16'b10_00_000000_00_0000}
-`define DP_TEQI        {`ALU_OP_SUBU, 16'b10_00_000000_00_0000}
-`define DP_TGE         {`ALU_OP_SLT,  16'b10_00_000000_00_0000}
-`define DP_TGEI        {`ALU_OP_SLT,  16'b10_00_000000_00_0000}
-`define DP_TGEIU       {`ALU_OP_SLTU, 16'b10_00_000000_00_0000}
-`define DP_TGEU        {`ALU_OP_SLTU, 16'b10_00_000000_00_0000}
-`define DP_TLT         {`ALU_OP_SLT,  16'b11_00_000000_00_0000}
-`define DP_TLTI        {`ALU_OP_SLT,  16'b11_00_000000_00_0000}
-`define DP_TLTIU       {`ALU_OP_SLTU, 16'b11_00_000000_00_0000}
-`define DP_TLTU        {`ALU_OP_SLTU, 16'b11_00_000000_00_0000}
-`define DP_TNE         {`ALU_OP_SUBU, 16'b11_00_000000_00_0000}
-`define DP_TNEI        {`ALU_OP_SUBU, 16'b11_00_000000_00_0000}
-`define DP_XOR         {`ALU_OP_XOR,  16'b00_10_000000_00_0000}
-`define DP_XORI        {`ALU_OP_XOR,  16'b00_10_000101_00_0000}
-
-//------------------------------------------------------------------------------
-/*
     Exception.
 
     All signals are active High.
@@ -484,5 +367,122 @@
 `define EXC_TNEI        `EXCEPTION_MEM          // Requieres result from EX, so it triggers in the MEM stage
 `define EXC_XOR         `EXCEPTION_NONE
 `define EXC_XORI        `EXCEPTION_NONE
+
+//------------------------------------------------------------------------------
+/*
+    Datapath controls.
+    All signals are active High.
+    ----------------------------------------------------------------------------
+        Bit     Name                Description
+    ----------------------------------------------------------------------------
+        20 :    id_alu_operation        Operation to execute.
+        19 :    .
+        18 :    .
+        17 :    .
+        16 :    .
+        -------------------------------
+        15:     id_trap                 Trap instruction
+        14:     id_trap_condition       Condition: ALU result = 0 (0), ALU result != 0 (1)
+        -------------------------------
+        13 :    id_gpr_we               Write enable (GPR)
+        12 :    id_mem_to_gpr_select    Select data: ALU(0), MEM(1)
+        -------------------------------
+        11 :    id_alu_port_a_select    Select: Rs(0), shamt(1), 0x04(2), 0x10(3)
+        10 :    .
+        9  :    id_alu_port_b_select    Select: Rt(0), S/ZImm16(1), PCAdd4(2), CP0(3)
+        8  :    .
+        7  :    id_gpr_wa_select        Select register: Rd(0), Rt(1), 31(2)
+        6  :    .
+        -------------------------------
+        5  :    id_jump                 Jump instruction
+        4  :    id_branch               Branch instruction
+        -------------------------------
+        3  :    id_mem_write            Write to data memory
+        2  :    id_mem_byte             Enable read/write one byte
+        1  :    id_mem_halfword         Enable read/write 2 bytes (16 bits data)
+        0  :    id_mem_data_sign_ext    Zero extend data (0) or Sign extend data (1)
+    ----------------------------------------------------------------------------
+*/
+//------------------------------------------------------------------------------
+`define DP_NONE        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_00_0000}
+`define DP_ADD         {`EXCEPTION_EX  , `ALU_OP_ADD,  16'b00_10_000000_00_0000}
+`define DP_ADDI        {`EXCEPTION_EX  , `ALU_OP_ADD,  16'b00_10_000101_00_0000}
+`define DP_ADDIU       {`EXCEPTION_NONE, `ALU_OP_ADDU, 16'b00_10_000101_00_0000}
+`define DP_ADDU        {`EXCEPTION_NONE, `ALU_OP_ADDU, 16'b00_10_000000_00_0000}
+`define DP_AND         {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_10_000000_00_0000}
+`define DP_ANDI        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_10_000101_00_0000}
+`define DP_BEQ         {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
+`define DP_BGEZ        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
+`define DP_BGEZAL      {`EXCEPTION_NONE, `ALU_OP_ADD,  16'b00_10_101010_01_0000}
+`define DP_BGTZ        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
+`define DP_BLEZ        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
+`define DP_BLTZ        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
+`define DP_BLTZAL      {`EXCEPTION_NONE, `ALU_OP_ADD,  16'b00_10_101010_01_0000}
+`define DP_BNE         {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
+`define DP_BREAK       {`EXCEPTION_ID  , `ALU_OP_AND,  16'b00_00_000000_00_0000}
+`define DP_CLO         {`EXCEPTION_NONE, `ALU_OP_CLO,  16'b00_10_000000_00_0000}
+`define DP_CLZ         {`EXCEPTION_NONE, `ALU_OP_CLZ,  16'b00_10_000000_00_0000}
+`define DP_DIV         {`EXCEPTION_NONE, `ALU_OP_DIV,  16'b00_00_000000_00_0000}
+`define DP_DIVU        {`EXCEPTION_NONE, `ALU_OP_DIVU, 16'b00_00_000000_00_0000}
+`define DP_ERET        {`EXCEPTION_ID  , `ALU_OP_AND,  16'b00_00_000000_00_0000}
+`define DP_J           {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_10_0000}
+`define DP_JAL         {`EXCEPTION_NONE, `ALU_OP_ADD,  16'b00_10_101010_10_0000}
+`define DP_JALR        {`EXCEPTION_NONE, `ALU_OP_ADD,  16'b00_10_101010_01_0000}
+`define DP_JR          {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
+`define DP_LB          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0101}
+`define DP_LBU         {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0100}
+`define DP_LH          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0011}
+`define DP_LHU         {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0010}
+`define DP_LL          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0000}
+`define DP_LUI         {`EXCEPTION_NONE, `ALU_OP_SLL,  16'b00_10_110101_00_0000}
+`define DP_LW          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0000}
+`define DP_MADD        {`EXCEPTION_NONE, `ALU_OP_MADD, 16'b00_00_000000_00_0000}
+`define DP_MADDU       {`EXCEPTION_NONE, `ALU_OP_MADDU,16'b00_00_000000_00_0000}
+`define DP_MFC0        {`EXCEPTION_ID  , `ALU_OP_B,    16'b00_10_001101_00_0000}
+`define DP_MFHI        {`EXCEPTION_NONE, `ALU_OP_MFHI, 16'b00_10_000000_00_0000}
+`define DP_MFLO        {`EXCEPTION_NONE, `ALU_OP_MFLO, 16'b00_10_000000_00_0000}
+`define DP_MOVN        {`EXCEPTION_NONE, `ALU_OP_A,    16'b00_00_000000_00_0000}
+`define DP_MOVZ        {`EXCEPTION_NONE, `ALU_OP_A,    16'b00_00_000000_00_0000}
+`define DP_MSUB        {`EXCEPTION_NONE, `ALU_OP_MSUB, 16'b00_00_000000_00_0000}
+`define DP_MSUBU       {`EXCEPTION_NONE, `ALU_OP_MSUBU,16'b00_00_000000_00_0000}
+`define DP_MTC0        {`EXCEPTION_ID  , `ALU_OP_AND,  16'b00_00_000000_00_0000}
+`define DP_MTHI        {`EXCEPTION_NONE, `ALU_OP_MTHI, 16'b00_00_000000_00_0000}
+`define DP_MTLO        {`EXCEPTION_NONE, `ALU_OP_MTLO, 16'b00_00_000000_00_0000}
+`define DP_MULT        {`EXCEPTION_NONE, `ALU_OP_MULS, 16'b00_00_000000_00_0000}
+`define DP_MULTU       {`EXCEPTION_NONE, `ALU_OP_MULU, 16'b00_00_000000_00_0000}
+`define DP_NOR         {`EXCEPTION_NONE, `ALU_OP_NOR,  16'b00_10_000000_00_0000}
+`define DP_OR          {`EXCEPTION_NONE, `ALU_OP_OR,   16'b00_10_000000_00_0000}
+`define DP_ORI         {`EXCEPTION_NONE, `ALU_OP_OR,   16'b00_10_000101_00_0000}
+`define DP_SB          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_00_000100_00_1100}
+`define DP_SC          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_1000}
+`define DP_SH          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_00_000100_00_1010}
+`define DP_SLL         {`EXCEPTION_NONE, `ALU_OP_SLL,  16'b00_10_010000_00_0000}
+`define DP_SLLV        {`EXCEPTION_NONE, `ALU_OP_SLL,  16'b00_10_000000_00_0000}
+`define DP_SLT         {`EXCEPTION_NONE, `ALU_OP_SLT,  16'b00_10_000000_00_0000}
+`define DP_SLTI        {`EXCEPTION_NONE, `ALU_OP_SLT,  16'b00_10_000101_00_0000}
+`define DP_SLTIU       {`EXCEPTION_NONE, `ALU_OP_SLTU, 16'b00_10_000101_00_0000}
+`define DP_SLTU        {`EXCEPTION_NONE, `ALU_OP_SLTU, 16'b00_10_000000_00_0000}
+`define DP_SRA         {`EXCEPTION_NONE, `ALU_OP_SRA,  16'b00_10_010000_00_0000}
+`define DP_SRAV        {`EXCEPTION_NONE, `ALU_OP_SRA,  16'b00_10_000000_00_0000}
+`define DP_SRL         {`EXCEPTION_NONE, `ALU_OP_SRL,  16'b00_10_010000_00_0000}
+`define DP_SRLV        {`EXCEPTION_NONE, `ALU_OP_SRL,  16'b00_10_000000_00_0000}
+`define DP_SUB         {`EXCEPTION_EX  , `ALU_OP_SUB,  16'b00_10_000000_00_0000}
+`define DP_SUBU        {`EXCEPTION_EX  , `ALU_OP_SUBU, 16'b00_10_000000_00_0000}
+`define DP_SW          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_00_000100_00_1000}
+`define DP_SYSCALL     {`EXCEPTION_ID  , `ALU_OP_ADDU, 16'b00_00_000000_00_0000}
+`define DP_TEQ         {`EXCEPTION_MEM , `ALU_OP_SUBU, 16'b10_00_000000_00_0000}
+`define DP_TEQI        {`EXCEPTION_MEM , `ALU_OP_SUBU, 16'b10_00_000000_00_0000}
+`define DP_TGE         {`EXCEPTION_MEM , `ALU_OP_SLT,  16'b10_00_000000_00_0000}
+`define DP_TGEI        {`EXCEPTION_MEM , `ALU_OP_SLT,  16'b10_00_000000_00_0000}
+`define DP_TGEIU       {`EXCEPTION_MEM , `ALU_OP_SLTU, 16'b10_00_000000_00_0000}
+`define DP_TGEU        {`EXCEPTION_MEM , `ALU_OP_SLTU, 16'b10_00_000000_00_0000}
+`define DP_TLT         {`EXCEPTION_MEM , `ALU_OP_SLT,  16'b11_00_000000_00_0000}
+`define DP_TLTI        {`EXCEPTION_MEM , `ALU_OP_SLT,  16'b11_00_000000_00_0000}
+`define DP_TLTIU       {`EXCEPTION_MEM , `ALU_OP_SLTU, 16'b11_00_000000_00_0000}
+`define DP_TLTU        {`EXCEPTION_MEM , `ALU_OP_SLTU, 16'b11_00_000000_00_0000}
+`define DP_TNE         {`EXCEPTION_MEM , `ALU_OP_SUBU, 16'b11_00_000000_00_0000}
+`define DP_TNEI        {`EXCEPTION_MEM , `ALU_OP_SUBU, 16'b11_00_000000_00_0000}
+`define DP_XOR         {`EXCEPTION_NONE, `ALU_OP_XOR,  16'b00_10_000000_00_0000}
+`define DP_XORI        {`EXCEPTION_NONE, `ALU_OP_XOR,  16'b00_10_000101_00_0000}
 
 // EOF
