@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_alu.v
 //  Created On    : Thu Sep  3 09:14:03 2015
-//  Last Modified : Fri Sep 04 11:24:22 2015
+//  Last Modified : Sun Sep 06 10:22:54 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -45,6 +45,7 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
     //--------------------------------------------------------------------------
     reg [63:0]         hilo; // hold the result from MULT instruction
     reg                div_active; // 1 if the divider is currently active.
+    reg                hilo_access;        // check access
     reg [5:0]          clo_result;
     reg [5:0]          clz_result;
 
@@ -97,7 +98,8 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
     assign op_divu            = (B != 32'd0) & (div_active == 1'b0) & (ex_alu_operation == `ALU_OP_DIVU) & enable_ex;
     assign op_mults           = (mult_active == 1'b0) & (ex_alu_operation == `ALU_OP_MULS) & enable_ex;
     assign op_multu           = (mult_active == 1'b0) & (ex_alu_operation == `ALU_OP_MULU) & enable_ex;
-    assign ex_request_stall   = ((op_divu | op_divs) | div_stall) | ((op_multu | op_mults) | (mult_active ^ mult_ready));
+    //assign ex_request_stall   = ((op_divu | op_divs) | div_stall) | ((op_multu | op_mults) | (mult_active ^ mult_ready));
+    assign ex_request_stall   = (div_active | mult_ready) & hilo_access;
     assign mult_stall         = ex_stall;
     assign mult_input_a       = ex_alu_port_a[31:0];
     assign mult_input_b       = ex_alu_port_b[31:0];
@@ -196,7 +198,6 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
             // Beginning of autoreset for uninitialized flops
             div_active <= 1'h0;
             // End of automatics
-            div_active <= 1'b0;
         end
         else begin
             case(div_active)
@@ -205,6 +206,27 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
             endcase // case (div_active)
         end // else: !if(rst)
     end // always @ (posedge clk)
+
+    //--------------------------------------------------------------------------
+    // Detect access to HILO register
+    //--------------------------------------------------------------------------
+    always @(*) begin
+        case (ex_alu_operation)
+            `ALU_OP_DIV   : hilo_access = 1'b1;
+            `ALU_OP_DIVU  : hilo_access = 1'b1;
+            `ALU_OP_MULS  : hilo_access = 1'b1;
+            `ALU_OP_MULU  : hilo_access = 1'b1;
+            `ALU_OP_MADD  : hilo_access = 1'b1;
+            `ALU_OP_MADDU : hilo_access = 1'b1;
+            `ALU_OP_MSUB  : hilo_access = 1'b1;
+            `ALU_OP_MSUBU : hilo_access = 1'b1;
+            `ALU_OP_MTHI  : hilo_access = 1'b1;
+            `ALU_OP_MTLO  : hilo_access = 1'b1;
+            `ALU_OP_MFHI  : hilo_access = 1'b1;
+            `ALU_OP_MFLO  : hilo_access = 1'b1;
+            default       : hilo_access = 1'b0;
+        endcase
+    end
 
     //--------------------------------------------------------------------------
     // Count Leading Ones/Zeros
