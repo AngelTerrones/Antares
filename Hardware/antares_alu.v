@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_alu.v
 //  Created On    : Thu Sep  3 09:14:03 2015
-//  Last Modified : Sun Sep 06 10:22:54 2015
+//  Last Modified : Sun Sep 06 10:33:39 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -169,7 +169,7 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
         else if ((div_stall == 1'b0) & (div_active == 1'b1)) begin // Divider unit has finished.
             hilo <= {remainder, quotient};
         end
-        else if(enable_ex & mult_ready) begin
+        else if(mult_ready) begin
             case (ex_alu_operation)
                 `ALU_OP_MULS    : hilo <= mult_result;
                 `ALU_OP_MULU    : hilo <= mult_result;
