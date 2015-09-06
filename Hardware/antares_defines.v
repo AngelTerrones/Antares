@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_defines.v
 //  Created On    : Mon Aug 31 19:32:04 2015
-//  Last Modified : Fri Sep 04 21:06:49 2015
+//  Last Modified : Sun Sep 06 11:09:43 2015
 //  Revision      : 0.1
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -370,11 +370,133 @@
 
 //------------------------------------------------------------------------------
 /*
+     Hazard and forwarding signals.
+
+     All signals are Active High.
+
+     ------------
+     Bit  Meaning
+     ------------
+     7:   Wants Rs by ID
+     6:   Needs Rs by ID
+     5:   Wants Rt by ID
+     4:   Needs Rt by ID
+     3:   Wants Rs by EX
+     2:   Needs Rs by EX
+     1:   Wants Rt by EX
+     0:   Needs Rt by EX
+*/
+//------------------------------------------------------------------------------
+`define HAZ_NOTHING     8'b00000000    // Jumps, Lui, Mfhi/lo, special, etc.
+`define HAZ_ID_RS_ID_RT 8'b11110000    // Beq, Bne, Traps
+`define HAZ_ID_RS       8'b11000000    // Most branches, Jumps to registers
+`define HAZ_ID_RT       8'b00110000    // Mtc0
+`define HAZ_ID_RT_EX_RS 8'b10111100    // Movn, Movz
+`define HAZ_EX_RS_EX_RT 8'b10101111    // Many R-Type ops
+`define HAZ_EX_RS       8'b10001100    // Immediates: Loads, Clo/z, Mthi/lo, etc.
+`define HAZ_EX_RS_W_RT  8'b10101110    // Stores
+`define HAZ_EX_RT       8'b00100011    // Shifts using Shamt field
+//-----------------------------------------
+`define HAZ_ADD     `HAZ_EX_RS_EX_RT
+`define HAZ_ADDI    `HAZ_EX_RS
+`define HAZ_ADDIU   `HAZ_EX_RS
+`define HAZ_ADDU    `HAZ_EX_RS_EX_RT
+`define HAZ_AND     `HAZ_EX_RS_EX_RT
+`define HAZ_ANDI    `HAZ_EX_RS
+`define HAZ_BEQ     `HAZ_ID_RS_ID_RT
+`define HAZ_BGEZ    `HAZ_ID_RS
+`define HAZ_BGEZAL  `HAZ_ID_RS
+`define HAZ_BGTZ    `HAZ_ID_RS
+`define HAZ_BLEZ    `HAZ_ID_RS
+`define HAZ_BLTZ    `HAZ_ID_RS
+`define HAZ_BLTZAL  `HAZ_ID_RS
+`define HAZ_BNE     `HAZ_ID_RS_ID_RT
+`define HAZ_BREAK   `HAZ_NOTHING
+`define HAZ_CLO     `HAZ_EX_RS
+`define HAZ_CLZ     `HAZ_EX_RS
+`define HAZ_DIV     `HAZ_EX_RS_EX_RT
+`define HAZ_DIVU    `HAZ_EX_RS_EX_RT
+`define HAZ_ERET    `HAZ_NOTHING
+`define HAZ_J       `HAZ_NOTHING
+`define HAZ_JAL     `HAZ_NOTHING
+`define HAZ_JALR    `HAZ_ID_RS
+`define HAZ_JR      `HAZ_ID_RS
+`define HAZ_LB      `HAZ_EX_RS
+`define HAZ_LBU     `HAZ_EX_RS
+`define HAZ_LH      `HAZ_EX_RS
+`define HAZ_LHU     `HAZ_EX_RS
+`define HAZ_LL      `HAZ_EX_RS
+`define HAZ_LUI     `HAZ_NOTHING
+`define HAZ_LW      `HAZ_EX_RS
+`define HAZ_MADD    `HAZ_EX_RS_EX_RT
+`define HAZ_MADDU   `HAZ_EX_RS_EX_RT
+`define HAZ_MFC0    `HAZ_NOTHING
+`define HAZ_MFHI    `HAZ_NOTHING
+`define HAZ_MFLO    `HAZ_NOTHING
+`define HAZ_MOVN    `HAZ_ID_RT_EX_RS
+`define HAZ_MOVZ    `HAZ_ID_RT_EX_RS
+`define HAZ_MSUB    `HAZ_EX_RS_EX_RT
+`define HAZ_MSUBU   `HAZ_EX_RS_EX_RT
+`define HAZ_MTC0    `HAZ_ID_RT
+`define HAZ_MTHI    `HAZ_EX_RS
+`define HAZ_MTLO    `HAZ_EX_RS
+`define HAZ_MULT    `HAZ_EX_RS_EX_RT
+`define HAZ_MULTU   `HAZ_EX_RS_EX_RT
+`define HAZ_NOR     `HAZ_EX_RS_EX_RT
+`define HAZ_OR      `HAZ_EX_RS_EX_RT
+`define HAZ_ORI     `HAZ_EX_RS
+`define HAZ_SB      `HAZ_EX_RS_W_RT
+`define HAZ_SC      `HAZ_EX_RS_W_RT
+`define HAZ_SH      `HAZ_EX_RS_W_RT
+`define HAZ_SLL     `HAZ_EX_RT
+`define HAZ_SLLV    `HAZ_EX_RS_EX_RT
+`define HAZ_SLT     `HAZ_EX_RS_EX_RT
+`define HAZ_SLTI    `HAZ_EX_RS
+`define HAZ_SLTIU   `HAZ_EX_RS
+`define HAZ_SLTU    `HAZ_EX_RS_EX_RT
+`define HAZ_SRA     `HAZ_EX_RT
+`define HAZ_SRAV    `HAZ_EX_RS_EX_RT
+`define HAZ_SRL     `HAZ_EX_RT
+`define HAZ_SRLV    `HAZ_EX_RS_EX_RT
+`define HAZ_SUB     `HAZ_EX_RS_EX_RT
+`define HAZ_SUBU    `HAZ_EX_RS_EX_RT
+`define HAZ_SW      `HAZ_EX_RS_W_RT
+`define HAZ_SYSCALL `HAZ_NOTHING
+`define HAZ_TEQ     `HAZ_EX_RS_EX_RT
+`define HAZ_TEQI    `HAZ_EX_RS
+`define HAZ_TGE     `HAZ_EX_RS_EX_RT
+`define HAZ_TGEI    `HAZ_EX_RS
+`define HAZ_TGEIU   `HAZ_EX_RS
+`define HAZ_TGEU    `HAZ_EX_RS_EX_RT
+`define HAZ_TLT     `HAZ_EX_RS_EX_RT
+`define HAZ_TLTI    `HAZ_EX_RS
+`define HAZ_TLTIU   `HAZ_EX_RS
+`define HAZ_TLTU    `HAZ_EX_RS_EX_RT
+`define HAZ_TNE     `HAZ_EX_RS_EX_RT
+`define HAZ_TNEI    `HAZ_EX_RS
+`define HAZ_XOR     `HAZ_EX_RS_EX_RT
+`define HAZ_XORI    `HAZ_EX_RS
+
+//------------------------------------------------------------------------------
+/*
     Datapath controls.
     All signals are active High.
     ----------------------------------------------------------------------------
         Bit     Name                Description
     ----------------------------------------------------------------------------
+        31 :                            Wants Rs by ID
+        30 :                            Needs Rs by ID
+        29 :                            Wants Rt by ID
+        28 :                            Needs Rt by ID
+        27 :                            Wants Rs by EX
+        26 :                            Needs Rs by EX
+        25 :                            Wants Rt by EX
+        24 :                            Needs Rt by EX
+        -------------------------------
+        23 :    id_id_exception_source  Instruction can cause exception @ ID
+        22 :    id_ex_exception_source  Instruction can cause exception @ EX
+        21 :    id_mem_exception_source Instruction can cause exception @ MEM
+        -------------------------------
         20 :    id_alu_operation        Operation to execute.
         19 :    .
         18 :    .
@@ -404,85 +526,85 @@
     ----------------------------------------------------------------------------
 */
 //------------------------------------------------------------------------------
-`define DP_NONE        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_00_0000}
-`define DP_ADD         {`EXCEPTION_EX  , `ALU_OP_ADD,  16'b00_10_000000_00_0000}
-`define DP_ADDI        {`EXCEPTION_EX  , `ALU_OP_ADD,  16'b00_10_000101_00_0000}
-`define DP_ADDIU       {`EXCEPTION_NONE, `ALU_OP_ADDU, 16'b00_10_000101_00_0000}
-`define DP_ADDU        {`EXCEPTION_NONE, `ALU_OP_ADDU, 16'b00_10_000000_00_0000}
-`define DP_AND         {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_10_000000_00_0000}
-`define DP_ANDI        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_10_000101_00_0000}
-`define DP_BEQ         {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BGEZ        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BGEZAL      {`EXCEPTION_NONE, `ALU_OP_ADD,  16'b00_10_101010_01_0000}
-`define DP_BGTZ        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BLEZ        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BLTZ        {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BLTZAL      {`EXCEPTION_NONE, `ALU_OP_ADD,  16'b00_10_101010_01_0000}
-`define DP_BNE         {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_BREAK       {`EXCEPTION_ID  , `ALU_OP_AND,  16'b00_00_000000_00_0000}
-`define DP_CLO         {`EXCEPTION_NONE, `ALU_OP_CLO,  16'b00_10_000000_00_0000}
-`define DP_CLZ         {`EXCEPTION_NONE, `ALU_OP_CLZ,  16'b00_10_000000_00_0000}
-`define DP_DIV         {`EXCEPTION_NONE, `ALU_OP_DIV,  16'b00_00_000000_00_0000}
-`define DP_DIVU        {`EXCEPTION_NONE, `ALU_OP_DIVU, 16'b00_00_000000_00_0000}
-`define DP_ERET        {`EXCEPTION_ID  , `ALU_OP_AND,  16'b00_00_000000_00_0000}
-`define DP_J           {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_10_0000}
-`define DP_JAL         {`EXCEPTION_NONE, `ALU_OP_ADD,  16'b00_10_101010_10_0000}
-`define DP_JALR        {`EXCEPTION_NONE, `ALU_OP_ADD,  16'b00_10_101010_01_0000}
-`define DP_JR          {`EXCEPTION_NONE, `ALU_OP_AND,  16'b00_00_000000_01_0000}
-`define DP_LB          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0101}
-`define DP_LBU         {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0100}
-`define DP_LH          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0011}
-`define DP_LHU         {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0010}
-`define DP_LL          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0000}
-`define DP_LUI         {`EXCEPTION_NONE, `ALU_OP_SLL,  16'b00_10_110101_00_0000}
-`define DP_LW          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_0000}
-`define DP_MADD        {`EXCEPTION_NONE, `ALU_OP_MADD, 16'b00_00_000000_00_0000}
-`define DP_MADDU       {`EXCEPTION_NONE, `ALU_OP_MADDU,16'b00_00_000000_00_0000}
-`define DP_MFC0        {`EXCEPTION_ID  , `ALU_OP_B,    16'b00_10_001101_00_0000}
-`define DP_MFHI        {`EXCEPTION_NONE, `ALU_OP_MFHI, 16'b00_10_000000_00_0000}
-`define DP_MFLO        {`EXCEPTION_NONE, `ALU_OP_MFLO, 16'b00_10_000000_00_0000}
-`define DP_MOVN        {`EXCEPTION_NONE, `ALU_OP_A,    16'b00_00_000000_00_0000}
-`define DP_MOVZ        {`EXCEPTION_NONE, `ALU_OP_A,    16'b00_00_000000_00_0000}
-`define DP_MSUB        {`EXCEPTION_NONE, `ALU_OP_MSUB, 16'b00_00_000000_00_0000}
-`define DP_MSUBU       {`EXCEPTION_NONE, `ALU_OP_MSUBU,16'b00_00_000000_00_0000}
-`define DP_MTC0        {`EXCEPTION_ID  , `ALU_OP_AND,  16'b00_00_000000_00_0000}
-`define DP_MTHI        {`EXCEPTION_NONE, `ALU_OP_MTHI, 16'b00_00_000000_00_0000}
-`define DP_MTLO        {`EXCEPTION_NONE, `ALU_OP_MTLO, 16'b00_00_000000_00_0000}
-`define DP_MULT        {`EXCEPTION_NONE, `ALU_OP_MULS, 16'b00_00_000000_00_0000}
-`define DP_MULTU       {`EXCEPTION_NONE, `ALU_OP_MULU, 16'b00_00_000000_00_0000}
-`define DP_NOR         {`EXCEPTION_NONE, `ALU_OP_NOR,  16'b00_10_000000_00_0000}
-`define DP_OR          {`EXCEPTION_NONE, `ALU_OP_OR,   16'b00_10_000000_00_0000}
-`define DP_ORI         {`EXCEPTION_NONE, `ALU_OP_OR,   16'b00_10_000101_00_0000}
-`define DP_SB          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_00_000100_00_1100}
-`define DP_SC          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_11_000101_00_1000}
-`define DP_SH          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_00_000100_00_1010}
-`define DP_SLL         {`EXCEPTION_NONE, `ALU_OP_SLL,  16'b00_10_010000_00_0000}
-`define DP_SLLV        {`EXCEPTION_NONE, `ALU_OP_SLL,  16'b00_10_000000_00_0000}
-`define DP_SLT         {`EXCEPTION_NONE, `ALU_OP_SLT,  16'b00_10_000000_00_0000}
-`define DP_SLTI        {`EXCEPTION_NONE, `ALU_OP_SLT,  16'b00_10_000101_00_0000}
-`define DP_SLTIU       {`EXCEPTION_NONE, `ALU_OP_SLTU, 16'b00_10_000101_00_0000}
-`define DP_SLTU        {`EXCEPTION_NONE, `ALU_OP_SLTU, 16'b00_10_000000_00_0000}
-`define DP_SRA         {`EXCEPTION_NONE, `ALU_OP_SRA,  16'b00_10_010000_00_0000}
-`define DP_SRAV        {`EXCEPTION_NONE, `ALU_OP_SRA,  16'b00_10_000000_00_0000}
-`define DP_SRL         {`EXCEPTION_NONE, `ALU_OP_SRL,  16'b00_10_010000_00_0000}
-`define DP_SRLV        {`EXCEPTION_NONE, `ALU_OP_SRL,  16'b00_10_000000_00_0000}
-`define DP_SUB         {`EXCEPTION_EX  , `ALU_OP_SUB,  16'b00_10_000000_00_0000}
-`define DP_SUBU        {`EXCEPTION_EX  , `ALU_OP_SUBU, 16'b00_10_000000_00_0000}
-`define DP_SW          {`EXCEPTION_MEM , `ALU_OP_ADDU, 16'b00_00_000100_00_1000}
-`define DP_SYSCALL     {`EXCEPTION_ID  , `ALU_OP_ADDU, 16'b00_00_000000_00_0000}
-`define DP_TEQ         {`EXCEPTION_MEM , `ALU_OP_SUBU, 16'b10_00_000000_00_0000}
-`define DP_TEQI        {`EXCEPTION_MEM , `ALU_OP_SUBU, 16'b10_00_000000_00_0000}
-`define DP_TGE         {`EXCEPTION_MEM , `ALU_OP_SLT,  16'b10_00_000000_00_0000}
-`define DP_TGEI        {`EXCEPTION_MEM , `ALU_OP_SLT,  16'b10_00_000000_00_0000}
-`define DP_TGEIU       {`EXCEPTION_MEM , `ALU_OP_SLTU, 16'b10_00_000000_00_0000}
-`define DP_TGEU        {`EXCEPTION_MEM , `ALU_OP_SLTU, 16'b10_00_000000_00_0000}
-`define DP_TLT         {`EXCEPTION_MEM , `ALU_OP_SLT,  16'b11_00_000000_00_0000}
-`define DP_TLTI        {`EXCEPTION_MEM , `ALU_OP_SLT,  16'b11_00_000000_00_0000}
-`define DP_TLTIU       {`EXCEPTION_MEM , `ALU_OP_SLTU, 16'b11_00_000000_00_0000}
-`define DP_TLTU        {`EXCEPTION_MEM , `ALU_OP_SLTU, 16'b11_00_000000_00_0000}
-`define DP_TNE         {`EXCEPTION_MEM , `ALU_OP_SUBU, 16'b11_00_000000_00_0000}
-`define DP_TNEI        {`EXCEPTION_MEM , `ALU_OP_SUBU, 16'b11_00_000000_00_0000}
-`define DP_XOR         {`EXCEPTION_NONE, `ALU_OP_XOR,  16'b00_10_000000_00_0000}
-`define DP_XORI        {`EXCEPTION_NONE, `ALU_OP_XOR,  16'b00_10_000101_00_0000}
+`define DP_NONE        {`HAZ_NOTHING    , `EXCEPTION_NONE, `ALU_OP_AND,   16'b00_00_000000_00_0000}
+`define DP_ADD         {`HAZ_EX_RS_EX_RT, `EXCEPTION_EX  , `ALU_OP_ADD,   16'b00_10_000000_00_0000}
+`define DP_ADDI        {`HAZ_EX_RS      , `EXCEPTION_EX  , `ALU_OP_ADD,   16'b00_10_000101_00_0000}
+`define DP_ADDIU       {`HAZ_EX_RS      , `EXCEPTION_NONE, `ALU_OP_ADDU,  16'b00_10_000101_00_0000}
+`define DP_ADDU        {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_ADDU,  16'b00_10_000000_00_0000}
+`define DP_AND         {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_AND,   16'b00_10_000000_00_0000}
+`define DP_ANDI        {`HAZ_EX_RS      , `EXCEPTION_NONE, `ALU_OP_AND,   16'b00_10_000101_00_0000}
+`define DP_BEQ         {`HAZ_ID_RS_ID_RT, `EXCEPTION_NONE, `ALU_OP_AND,   16'b00_00_000000_01_0000}
+`define DP_BGEZ        {`HAZ_ID_RS      , `EXCEPTION_NONE, `ALU_OP_AND,   16'b00_00_000000_01_0000}
+`define DP_BGEZAL      {`HAZ_ID_RS      , `EXCEPTION_NONE, `ALU_OP_ADD,   16'b00_10_101010_01_0000}
+`define DP_BGTZ        {`HAZ_ID_RS      , `EXCEPTION_NONE, `ALU_OP_AND,   16'b00_00_000000_01_0000}
+`define DP_BLEZ        {`HAZ_ID_RS      , `EXCEPTION_NONE, `ALU_OP_AND,   16'b00_00_000000_01_0000}
+`define DP_BLTZ        {`HAZ_ID_RS      , `EXCEPTION_NONE, `ALU_OP_AND,   16'b00_00_000000_01_0000}
+`define DP_BLTZAL      {`HAZ_ID_RS      , `EXCEPTION_NONE, `ALU_OP_ADD,   16'b00_10_101010_01_0000}
+`define DP_BNE         {`HAZ_ID_RS_ID_RT, `EXCEPTION_NONE, `ALU_OP_AND,   16'b00_00_000000_01_0000}
+`define DP_BREAK       {`HAZ_NOTHING    , `EXCEPTION_ID  , `ALU_OP_AND,   16'b00_00_000000_00_0000}
+`define DP_CLO         {`HAZ_EX_RS      , `EXCEPTION_NONE, `ALU_OP_CLO,   16'b00_10_000000_00_0000}
+`define DP_CLZ         {`HAZ_EX_RS      , `EXCEPTION_NONE, `ALU_OP_CLZ,   16'b00_10_000000_00_0000}
+`define DP_DIV         {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_DIV,   16'b00_00_000000_00_0000}
+`define DP_DIVU        {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_DIVU,  16'b00_00_000000_00_0000}
+`define DP_ERET        {`HAZ_NOTHING    , `EXCEPTION_ID  , `ALU_OP_AND,   16'b00_00_000000_00_0000}
+`define DP_J           {`HAZ_NOTHING    , `EXCEPTION_NONE, `ALU_OP_AND,   16'b00_00_000000_10_0000}
+`define DP_JAL         {`HAZ_NOTHING    , `EXCEPTION_NONE, `ALU_OP_ADD,   16'b00_10_101010_10_0000}
+`define DP_JALR        {`HAZ_ID_RS      , `EXCEPTION_NONE, `ALU_OP_ADD,   16'b00_10_101010_01_0000}
+`define DP_JR          {`HAZ_ID_RS      , `EXCEPTION_NONE, `ALU_OP_AND,   16'b00_00_000000_01_0000}
+`define DP_LB          {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_ADDU,  16'b00_11_000101_00_0101}
+`define DP_LBU         {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_ADDU,  16'b00_11_000101_00_0100}
+`define DP_LH          {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_ADDU,  16'b00_11_000101_00_0011}
+`define DP_LHU         {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_ADDU,  16'b00_11_000101_00_0010}
+`define DP_LL          {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_ADDU,  16'b00_11_000101_00_0000}
+`define DP_LUI         {`HAZ_NOTHING    , `EXCEPTION_NONE, `ALU_OP_SLL,   16'b00_10_110101_00_0000}
+`define DP_LW          {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_ADDU,  16'b00_11_000101_00_0000}
+`define DP_MADD        {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_MADD,  16'b00_00_000000_00_0000}
+`define DP_MADDU       {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_MADDU, 16'b00_00_000000_00_0000}
+`define DP_MFC0        {`HAZ_NOTHING    , `EXCEPTION_ID  , `ALU_OP_B,     16'b00_10_001101_00_0000}
+`define DP_MFHI        {`HAZ_NOTHING    , `EXCEPTION_NONE, `ALU_OP_MFHI,  16'b00_10_000000_00_0000}
+`define DP_MFLO        {`HAZ_NOTHING    , `EXCEPTION_NONE, `ALU_OP_MFLO,  16'b00_10_000000_00_0000}
+`define DP_MOVN        {`HAZ_ID_RT_EX_RS, `EXCEPTION_NONE, `ALU_OP_A,     16'b00_00_000000_00_0000}
+`define DP_MOVZ        {`HAZ_ID_RT_EX_RS, `EXCEPTION_NONE, `ALU_OP_A,     16'b00_00_000000_00_0000}
+`define DP_MSUB        {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_MSUB,  16'b00_00_000000_00_0000}
+`define DP_MSUBU       {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_MSUBU, 16'b00_00_000000_00_0000}
+`define DP_MTC0        {`HAZ_ID_RT      , `EXCEPTION_ID  , `ALU_OP_AND,   16'b00_00_000000_00_0000}
+`define DP_MTHI        {`HAZ_EX_RS      , `EXCEPTION_NONE, `ALU_OP_MTHI,  16'b00_00_000000_00_0000}
+`define DP_MTLO        {`HAZ_EX_RS      , `EXCEPTION_NONE, `ALU_OP_MTLO,  16'b00_00_000000_00_0000}
+`define DP_MULT        {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_MULS,  16'b00_00_000000_00_0000}
+`define DP_MULTU       {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_MULU,  16'b00_00_000000_00_0000}
+`define DP_NOR         {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_NOR,   16'b00_10_000000_00_0000}
+`define DP_OR          {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_OR,    16'b00_10_000000_00_0000}
+`define DP_ORI         {`HAZ_EX_RS      , `EXCEPTION_NONE, `ALU_OP_OR,    16'b00_10_000101_00_0000}
+`define DP_SB          {`HAZ_EX_RS_W_RT , `EXCEPTION_MEM , `ALU_OP_ADDU,  16'b00_00_000100_00_1100}
+`define DP_SC          {`HAZ_EX_RS_W_RT , `EXCEPTION_MEM , `ALU_OP_ADDU,  16'b00_11_000101_00_1000}
+`define DP_SH          {`HAZ_EX_RS_W_RT , `EXCEPTION_MEM , `ALU_OP_ADDU,  16'b00_00_000100_00_1010}
+`define DP_SLL         {`HAZ_EX_RT      , `EXCEPTION_NONE, `ALU_OP_SLL,   16'b00_10_010000_00_0000}
+`define DP_SLLV        {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_SLL,   16'b00_10_000000_00_0000}
+`define DP_SLT         {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_SLT,   16'b00_10_000000_00_0000}
+`define DP_SLTI        {`HAZ_EX_RS      , `EXCEPTION_NONE, `ALU_OP_SLT,   16'b00_10_000101_00_0000}
+`define DP_SLTIU       {`HAZ_EX_RS      , `EXCEPTION_NONE, `ALU_OP_SLTU,  16'b00_10_000101_00_0000}
+`define DP_SLTU        {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_SLTU,  16'b00_10_000000_00_0000}
+`define DP_SRA         {`HAZ_EX_RT      , `EXCEPTION_NONE, `ALU_OP_SRA,   16'b00_10_010000_00_0000}
+`define DP_SRAV        {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_SRA,   16'b00_10_000000_00_0000}
+`define DP_SRL         {`HAZ_EX_RT      , `EXCEPTION_NONE, `ALU_OP_SRL,   16'b00_10_010000_00_0000}
+`define DP_SRLV        {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_SRL,   16'b00_10_000000_00_0000}
+`define DP_SUB         {`HAZ_EX_RS_EX_RT, `EXCEPTION_EX  , `ALU_OP_SUB,   16'b00_10_000000_00_0000}
+`define DP_SUBU        {`HAZ_EX_RS_EX_RT, `EXCEPTION_EX  , `ALU_OP_SUBU,  16'b00_10_000000_00_0000}
+`define DP_SW          {`HAZ_EX_RS_W_RT , `EXCEPTION_MEM , `ALU_OP_ADDU,  16'b00_00_000100_00_1000}
+`define DP_SYSCALL     {`HAZ_NOTHING    , `EXCEPTION_ID  , `ALU_OP_ADDU,  16'b00_00_000000_00_0000}
+`define DP_TEQ         {`HAZ_EX_RS_EX_RT, `EXCEPTION_MEM , `ALU_OP_SUBU,  16'b10_00_000000_00_0000}
+`define DP_TEQI        {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_SUBU,  16'b10_00_000000_00_0000}
+`define DP_TGE         {`HAZ_EX_RS_EX_RT, `EXCEPTION_MEM , `ALU_OP_SLT,   16'b10_00_000000_00_0000}
+`define DP_TGEI        {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_SLT,   16'b10_00_000000_00_0000}
+`define DP_TGEIU       {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_SLTU,  16'b10_00_000000_00_0000}
+`define DP_TGEU        {`HAZ_EX_RS_EX_RT, `EXCEPTION_MEM , `ALU_OP_SLTU,  16'b10_00_000000_00_0000}
+`define DP_TLT         {`HAZ_EX_RS_EX_RT, `EXCEPTION_MEM , `ALU_OP_SLT,   16'b11_00_000000_00_0000}
+`define DP_TLTI        {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_SLT,   16'b11_00_000000_00_0000}
+`define DP_TLTIU       {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_SLTU,  16'b11_00_000000_00_0000}
+`define DP_TLTU        {`HAZ_EX_RS_EX_RT, `EXCEPTION_MEM , `ALU_OP_SLTU,  16'b11_00_000000_00_0000}
+`define DP_TNE         {`HAZ_EX_RS_EX_RT, `EXCEPTION_MEM , `ALU_OP_SUBU,  16'b11_00_000000_00_0000}
+`define DP_TNEI        {`HAZ_EX_RS      , `EXCEPTION_MEM , `ALU_OP_SUBU,  16'b11_00_000000_00_0000}
+`define DP_XOR         {`HAZ_EX_RS_EX_RT, `EXCEPTION_NONE, `ALU_OP_XOR,   16'b00_10_000000_00_0000}
+`define DP_XORI        {`HAZ_EX_RS      , `EXCEPTION_NONE, `ALU_OP_XOR,   16'b00_10_000101_00_0000}
 
 // EOF

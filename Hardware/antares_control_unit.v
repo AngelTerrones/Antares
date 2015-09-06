@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_control_unit.v
 //  Created On    : Fri Sep  4 11:55:21 2015
-//  Last Modified : Fri Sep 04 21:31:31 2015
+//  Last Modified : Sun Sep 06 11:21:02 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -17,8 +17,8 @@ module antares_control_unit #(parameter ENABLE_HW_MULT = 1, // Enable multiply i
                               parameter ENABLE_HW_CLOZ = 1) // Enable CL=/CLZ instructions
     (/*AUTOARG*/
     // Outputs
-    id_imm_sign_ext, id_movn, id_movz, id_llsc, id_syscall, id_breakpoint,
-    id_reserved, id_mfc0, id_mtc0, id_eret, id_cp1_instruction,
+    dp_hazard, id_imm_sign_ext, id_movn, id_movz, id_llsc, id_syscall,
+    id_breakpoint, id_reserved, id_mfc0, id_mtc0, id_eret, id_cp1_instruction,
     id_cp2_instruction, id_cp3_instruction, id_id_exception_source,
     id_ex_exception_source, id_mem_exception_source, id_trap, id_trap_condition,
     id_gpr_we, id_mem_to_gpr_select, id_alu_operation, id_alu_port_a_select,
@@ -32,6 +32,7 @@ module antares_control_unit #(parameter ENABLE_HW_MULT = 1, // Enable multiply i
     input [5:0]  op_function;             // For RR-type instruction
     input [4:0]  op_rs;                   // For mtc0 and mfc0 instructions
     input [4:0]  op_rt;                   // For branch instructions
+    output [7:0] dp_hazard;
     output       id_imm_sign_ext;         // sign extend the imm16
     output       id_movn;                 // MOVN instruction
     output       id_movz;                 // MOVZ instruction
@@ -66,7 +67,7 @@ module antares_control_unit #(parameter ENABLE_HW_MULT = 1, // Enable multiply i
     //--------------------------------------------------------------------------
     // Signal Declaration: reg
     //--------------------------------------------------------------------------
-    reg     [23:0]  datapath;               // all control signals
+    reg     [31:0]  datapath;               // all control signals
 
     //--------------------------------------------------------------------------
     // Signal Declaration: wires
@@ -136,6 +137,15 @@ module antares_control_unit #(parameter ENABLE_HW_MULT = 1, // Enable multiply i
      ----------------------------------------------------------------------------
      Bit     Name                Description
      ----------------------------------------------------------------------------
+        31 :                            Wants Rs by ID
+        30 :                            Needs Rs by ID
+        29 :                            Wants Rt by ID
+        28 :                            Needs Rt by ID
+        27 :                            Wants Rs by EX
+        26 :                            Needs Rs by EX
+        25 :                            Wants Rt by EX
+        24 :                            Needs Rt by EX
+        -------------------------------
         23 :    id_id_exception_source  Instruction can cause exception @ ID
         22 :    id_ex_exception_source  Instruction can cause exception @ EX
         21 :    id_mem_exception_source Instruction can cause exception @ MEM
@@ -168,6 +178,7 @@ module antares_control_unit #(parameter ENABLE_HW_MULT = 1, // Enable multiply i
         0  :    id_mem_data_sign_ext    Zero extend data (0) or Sign extend data (1)
     ----------------------------------------------------------------------------
     */
+    assign dp_hazard                = datapath[31:24];
     assign id_id_exception_source   = datapath[23];
     assign id_ex_exception_source   = datapath[22];
     assign id_mem_exception_source  = datapath[21];

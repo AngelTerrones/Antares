@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_idex_register.v
 //  Created On    : Sat Sep  5 21:08:59 2015
-//  Last Modified : Sat Sep 05 21:41:09 2015
+//  Last Modified : Sun Sep 06 11:18:17 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -15,17 +15,18 @@ module antares_idex_register (/*AUTOARG*/
     ex_alu_operation, ex_data_rs, ex_data_rt, ex_gpr_we, ex_mem_to_gpr_select,
     ex_mem_write, ex_alu_port_a_select, ex_alu_port_b_select, ex_gpr_wa_select,
     ex_mem_byte, ex_mem_halfword, ex_mem_data_sign_ext, ex_rs, ex_rt,
-    ex_sign_imm16, ex_cp0_data, ex_exception_pc, ex_movn, ex_movz, ex_llsc,
-    ex_kernel_mode, ex_is_bds, ex_trap, ex_trap_condition,
+    ex_dp_hazard, ex_sign_imm16, ex_cp0_data, ex_exception_pc, ex_movn, ex_movz,
+    ex_llsc, ex_kernel_mode, ex_is_bds, ex_trap, ex_trap_condition,
     ex_ex_exception_source, ex_mem_exception_source,
     // Inputs
     clk, rst, id_alu_operation, id_data_rs, id_data_rt, id_gpr_we,
     id_mem_to_gpr_select, id_mem_write, id_alu_port_a_select,
     id_alu_port_b_select, id_gpr_wa_select, id_mem_byte, id_mem_halfword,
-    id_mem_data_sign_ext, id_rs, id_rt, id_imm_sign_ext, id_sign_imm16,
-    id_cp0_data, id_exception_pc, id_movn, id_movz, id_llsc, id_kernel_mode,
-    id_is_bds, id_trap, id_trap_condition, id_ex_exception_source,
-    id_mem_exception_source, id_flush, id_stall, ex_stall
+    id_mem_data_sign_ext, id_rs, id_rt, id_dp_hazard, id_imm_sign_ext,
+    id_sign_imm16, id_cp0_data, id_exception_pc, id_movn, id_movz, id_llsc,
+    id_kernel_mode, id_is_bds, id_trap, id_trap_condition,
+    id_ex_exception_source, id_mem_exception_source, id_flush, id_stall,
+    ex_stall
     );
 
     input             clk;                  // Main clock
@@ -44,6 +45,7 @@ module antares_idex_register (/*AUTOARG*/
     input             id_mem_data_sign_ext; // Zero/Sign extend
     input [4:0]       id_rs;                // Rs
     input [4:0]       id_rt;                // Rt
+    input [3:0]       id_dp_hazard;
     input             id_imm_sign_ext;      // extend the imm16
     input [15:0]      id_sign_imm16;        // sign_ext(imm16)
     input [31:0]      id_cp0_data;          //
@@ -74,6 +76,7 @@ module antares_idex_register (/*AUTOARG*/
     output reg        ex_mem_data_sign_ext; //
     output reg [4:0]  ex_rs;                //
     output reg [4:0]  ex_rt;                //
+    output reg [3:0]  ex_dp_hazard;
     output reg [16:0] ex_sign_imm16;        //
     output reg [31:0] ex_cp0_data;
     output reg [31:0] ex_exception_pc;
@@ -109,6 +112,7 @@ module antares_idex_register (/*AUTOARG*/
         ex_mem_data_sign_ext    <= (rst) ? 1'b0  : ((ex_stall) ? ex_mem_data_sign_ext                                    : id_mem_data_sign_ext);
         ex_rs                   <= (rst) ? 5'b0  : ((ex_stall) ? ex_rs                                                   : id_rs);
         ex_rt                   <= (rst) ? 5'b0  : ((ex_stall) ? ex_rt                                                   : id_rt);
+        ex_dp_hazard            <= (rst) ? 4'b0  : ((ex_stall) ? ex_dp_hazard            : ((id_stall | id_flush) ? 4'b0 : id_dp_hazard));
         ex_sign_imm16           <= (rst) ? 17'b0 : ((ex_stall) ? ex_sign_imm16                                           : id_imm_extended);
         ex_cp0_data             <= (rst) ? 32'b0 : ((ex_stall) ? ex_cp0_data                                             : id_cp0_data);
         ex_exception_pc         <= (rst) ? 32'b0 : ((ex_stall) ? ex_exception_pc                                         : id_exception_pc);

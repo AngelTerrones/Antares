@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_core.v
 //  Created On    : Sat Sep  5 21:45:33 2015
-//  Last Modified : Sun Sep 06 08:37:19 2015
+//  Last Modified : Sun Sep 06 11:30:33 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -50,11 +50,13 @@ module antares_core #(parameter ENABLE_HW_MULT = 1,
     // Beginning of automatic wires (for undeclared instantiated-module outputs)
     wire [31:0]         cp0_data_output;        // From cpzero0 of antares_cpzero.v
     wire                dmem_request_stall;     // From load_store_unit0 of antares_load_store_unit.v
+    wire [7:0]          dp_hazard;              // From control_unit0 of antares_control_unit.v
     wire [4:0]          ex_alu_operation;       // From IDEX_register of antares_idex_register.v
     wire [1:0]          ex_alu_port_a_select;   // From IDEX_register of antares_idex_register.v
     wire [1:0]          ex_alu_port_b_select;   // From IDEX_register of antares_idex_register.v
     wire [31:0]         ex_data_rs;             // From IDEX_register of antares_idex_register.v
     wire [31:0]         ex_data_rt;             // From IDEX_register of antares_idex_register.v
+    wire [3:0]          ex_dp_hazard;           // From IDEX_register of antares_idex_register.v
     wire                ex_flush;               // From cpzero0 of antares_cpzero.v
     wire [1:0]          ex_gpr_wa_select;       // From IDEX_register of antares_idex_register.v
     wire                ex_gpr_we;              // From IDEX_register of antares_idex_register.v
@@ -205,7 +207,7 @@ module antares_core #(parameter ENABLE_HW_MULT = 1,
     wire            exception_ready;
     wire            pc_source_select;
     wire            if_stall_pc_register;
-    wire [7:0]      DP_Hazards;
+    wire [7:0]      haz_dp_hazards;
 
     //--------------------------------------------------------------------------
     // assignments
@@ -227,6 +229,8 @@ module antares_core #(parameter ENABLE_HW_MULT = 1,
     assign exc_trap              = mem_trap & (mem_trap_condition ^ (mem_alu_result == 32'b0));
     assign pc_source_select      = (id_take_branch & id_branch) | id_jump;
     assign if_stall_pc_register  = if_stall | id_stall | halt_0;
+
+    assign haz_dp_hazards = {dp_hazard[7:4], ex_dp_hazard};
 
     //------------------------------------------------------------------------------------------------------------------
     // UPDATE: Getting the halt signal from the CP0.
@@ -284,7 +288,6 @@ module antares_core #(parameter ENABLE_HW_MULT = 1,
 
     antares_ifid_register IFID_register (// Inputs
                                          .if_exception_pc       (if_pc[31:0]),
-                                         .if_flush              (if_stall_pc_register),
                                          /*AUTOINST*/
                                          // Outputs
                                          .id_instruction        (id_instruction[31:0]),
@@ -298,6 +301,7 @@ module antares_core #(parameter ENABLE_HW_MULT = 1,
                                          .if_instruction        (if_instruction[31:0]),
                                          .if_pc_add4            (if_pc_add4[31:0]),
                                          .if_is_bds             (if_is_bds),
+                                         .if_flush              (if_flush),
                                          .if_stall              (if_stall),
                                          .id_stall              (id_stall));
     //--------------------------------------------------------------------------
@@ -338,6 +342,7 @@ module antares_core #(parameter ENABLE_HW_MULT = 1,
                                         .id_reserved             (exc_reserved),
                                         /*AUTOINST*/
                                         // Outputs
+                                        .dp_hazard      (dp_hazard[7:0]),
                                         .id_imm_sign_ext(id_imm_sign_ext),
                                         .id_movn        (id_movn),
                                         .id_movz        (id_movz),
@@ -398,6 +403,7 @@ module antares_core #(parameter ENABLE_HW_MULT = 1,
                                          .id_cp0_data             (cp0_data_output[31:0]),
                                          .id_rs                 (op_rs[4:0]),
                                          .id_rt                 (op_rt[4:0]),
+                                         .id_dp_hazard          (dp_hazard[3:0]),
                                          /*AUTOINST*/
                                          // Outputs
                                          .ex_alu_operation      (ex_alu_operation[4:0]),
@@ -414,6 +420,7 @@ module antares_core #(parameter ENABLE_HW_MULT = 1,
                                          .ex_mem_data_sign_ext  (ex_mem_data_sign_ext),
                                          .ex_rs                 (ex_rs[4:0]),
                                          .ex_rt                 (ex_rt[4:0]),
+                                         .ex_dp_hazard          (ex_dp_hazard[3:0]),
                                          .ex_sign_imm16         (ex_sign_imm16[16:0]),
                                          .ex_cp0_data           (ex_cp0_data[31:0]),
                                          .ex_exception_pc       (ex_exception_pc[31:0]),
@@ -610,6 +617,7 @@ module antares_core #(parameter ENABLE_HW_MULT = 1,
                                       .id_rs            (op_rs[4:0]),
                                       .id_rt            (op_rt[4:0]),
                                       .mem_mem_read     (mem_mem_to_gpr_select),
+                                      .DP_Hazards       (haz_dp_hazards[7:0]),
                                       /*AUTOINST*/
                                       // Outputs
                                       .forward_id_rs    (forward_id_rs[1:0]),
@@ -622,7 +630,6 @@ module antares_core #(parameter ENABLE_HW_MULT = 1,
                                       .mem_stall        (mem_stall),
                                       .wb_stall         (wb_stall),
                                       // Inputs
-                                      .DP_Hazards       (DP_Hazards[7:0]),
                                       .ex_rs            (ex_rs[4:0]),
                                       .ex_rt            (ex_rt[4:0]),
                                       .ex_gpr_wa        (ex_gpr_wa[4:0]),
