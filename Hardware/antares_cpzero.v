@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_cpzero.v
 //  Created On    : Sat Sep  5 18:48:44 2015
-//  Last Modified : Sat Sep 05 20:15:37 2015
+//  Last Modified : Sun Sep 06 00:48:47 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -17,10 +17,10 @@
 
 module antares_cpzero (/*AUTOARG*/
     // Outputs
-    data_output, kernel_mode, halt, if_exception_stall, id_exception_stall,
-    ex_exception_stall, mem_exception_stall, if_exception_flush,
-    id_exception_flush, ex_exception_flush, mem_exception_flush,
-    exception_ready, exception_pc_select, pc_exception,
+    cp0_data_output, id_kernel_mode, halt, if_exception_stall,
+    id_exception_stall, ex_exception_stall, mem_exception_stall, if_flush,
+    id_flush, ex_flush, mem_flush, exception_ready, exception_pc_select,
+    pc_exception,
     // Inputs
     clk, mfc0, mtc0, eret, cp1_instruction, cp2_instruction, cp3_instruction,
     register_address, select, data_input, if_stall, id_stall, interrupts, rst,
@@ -45,8 +45,8 @@ module antares_cpzero (/*AUTOARG*/
     input [31:0]      data_input;       // Input data (write)
     input             if_stall;         // Can not write to CP0 if IF/ID is stalled
     input             id_stall;         // Can not write to CP0 if IF/ID is stalled
-    output reg [31:0] data_output;      // Output data (read)
-    output            kernel_mode;      // Kernel mode: 0 Kernel, 1 User
+    output reg [31:0] cp0_data_output;  // Output data (read)
+    output            id_kernel_mode;      // Kernel mode: 0 Kernel, 1 User
     // Hardware/External Interrupts
     input [4:0]       interrupts;        // Up to 5 external interrupts
     // exceptions
@@ -82,10 +82,10 @@ module antares_cpzero (/*AUTOARG*/
     output            id_exception_stall;  // Stall pipeline: exception and wait for a clean pipeline
     output            ex_exception_stall;  // Stall pipeline: exception and wait for a clean pipeline
     output            mem_exception_stall; // Stall pipeline: exception and wait for a clean pipeline
-    output            if_exception_flush;  // Flush the pipeline: exception.
-    output            id_exception_flush;  // Flush the pipeline: exception.
-    output            ex_exception_flush;  // Flush the pipeline: exception.
-    output            mem_exception_flush; // Flush the pipeline: exception.
+    output            if_flush;  // Flush the pipeline: exception.
+    output            id_flush;  // Flush the pipeline: exception.
+    output            ex_flush;  // Flush the pipeline: exception.
+    output            mem_flush; // Flush the pipeline: exception.
     output            exception_ready;
     output            exception_pc_select; // Select the PC from CP0
     output reg [31:0] pc_exception;        // Address for the new PC (exception/return from exception)
@@ -222,18 +222,18 @@ module antares_cpzero (/*AUTOARG*/
                        Config1_C2, Config1_MD, Config1_PC, Config1_WR, Config1_CA, Config1_EP, Config1_FP};
 
     assign exception_cp = cp1_instruction | cp2_instruction | cp3_instruction |                         // Check if the co-processor instruction is valid.
-                          ( (mtc0 | mfc0 | eret) & ~(Status_CU_0 | kernel_mode) );                      // For CP0   : only if it has been enabled, or in kernel mode, it's ok to use these instructions.
+                          ( (mtc0 | mfc0 | eret) & ~(Status_CU_0 | id_kernel_mode) );                      // For CP0   : only if it has been enabled, or in kernel mode, it's ok to use these instructions.
                                                                                                         // For CP3-1 : Always trap.
 
     assign exception_no_interrupts = exc_address_if | exc_ibus_error | exc_syscall | exc_breakpoint | exc_reserved |    // All exceptions, but interrupts, reset, soft-reset and nmi
                                      exception_cp | exc_overflow | exc_address_l_mem | exc_address_s_mem |              //
                                      exc_dbus_error | exc_trap;                                                         //
 
-    assign kernel_mode         = (Status_KSU != 2'b10) | Status_EXL | Status_ERL;                        // Kernel mode if mode != user, Exception level or Error level. To inhibit new exceptions/interrupts
+    assign id_kernel_mode         = (Status_KSU != 2'b10) | Status_EXL | Status_ERL;                        // Kernel mode if mode != user, Exception level or Error level. To inhibit new exceptions/interrupts
     assign interrupt_5         = (Count == Compare) & Status_IM[7];                                      // Counter interrupt (#5)
     assign interrupt_enabled   = exc_nmi | ( Status_IE & ( (Cause_IP[7:0] & Status_IM[7:0]) != 8'b0 ) ); // Interrupt  if NMI, Interrupts are enabled (global) and the individual interrupt is enable.
     assign exception_interrupt = interrupt_enabled & ~Status_EXL & ~Status_ERL & ~id_is_flushed;         // Interrupt is OK to process if: no exception level and no error level, and the instruction is a forced NOP.
-    assign cp0_enable_write    = mtc0 & ~id_stall & (Status_CU_0 | kernel_mode) &
+    assign cp0_enable_write    = mtc0 & ~id_stall & (Status_CU_0 | id_kernel_mode) &
                                (~mem_exception & ~ex_exception & ~id_exception & ~if_exception);         // Write to CP0 if ID is not stalled, CP0 is enabled or in kernel mode, and no exceptions
     assign halt                = Status_HALT;
 
@@ -288,31 +288,31 @@ module antares_cpzero (/*AUTOARG*/
     //--------------------------------------------------------------------------
     // Flush the stages in case of exception
     //--------------------------------------------------------------------------
-    assign mem_exception_flush = mem_exception;
-    assign ex_exception_flush  = mem_exception | ex_exception;
-    assign id_exception_flush  = mem_exception | ex_exception | id_exception;
-    assign if_exception_flush  = mem_exception | ex_exception | id_exception | if_exception | (eret & ~id_stall);       // ERET doest not execute the next instruction!!
+    assign mem_flush = mem_exception;
+    assign ex_flush  = mem_exception | ex_exception;
+    assign id_flush  = mem_exception | ex_exception | id_exception;
+    assign if_flush  = mem_exception | ex_exception | id_exception | if_exception | (eret & ~id_stall);       // ERET doest not execute the next instruction!!
 
     //--------------------------------------------------------------------------
     // Read CP0 registers
     //--------------------------------------------------------------------------
     always @(*) begin
-        if(mfc0 & (Status_CU_0 | kernel_mode)) begin
+        if(mfc0 & (Status_CU_0 | id_kernel_mode)) begin
             case (register_address)
-                5'd8   : data_output = BadVAddr;
-                5'd9   : data_output = Count;
-                5'd11  : data_output = Compare;
-                5'd12  : data_output = Status;
-                5'd13  : data_output = Cause;
-                5'd14  : data_output = EPC;
-                5'd15  : data_output = PRId;
-                5'd16  : data_output = (select == 3'b000) ? Config : Config1;
-                5'd30  : data_output = ErrorEPC;
-                default: data_output = 32'h0000_0000;
+                5'd8   : cp0_data_output = BadVAddr;
+                5'd9   : cp0_data_output = Count;
+                5'd11  : cp0_data_output = Compare;
+                5'd12  : cp0_data_output = Status;
+                5'd13  : cp0_data_output = Cause;
+                5'd14  : cp0_data_output = EPC;
+                5'd15  : cp0_data_output = PRId;
+                5'd16  : cp0_data_output = (select == 3'b000) ? Config : Config1;
+                5'd30  : cp0_data_output = ErrorEPC;
+                default: cp0_data_output = 32'h0000_0000;
             endcase
         end
         else begin
-            data_output = 32'h0000_0000;
+            cp0_data_output = 32'h0000_0000;
         end
     end
 
