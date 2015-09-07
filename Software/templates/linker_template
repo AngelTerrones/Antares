@@ -1,0 +1,71 @@
+/*
+ * ---------------------------------------------------------------------------------------------------------------------
+ * Linker script for MIPS processor (MUSB)
+ * ---------------------------------------------------------------------------------------------------------------------
+ *
+ * Entry point: Boot (in boot.s)
+ *
+ * Memory Section
+ * --------------
+ *
+ * Instruction Memory starts at address 0x00000000
+ * Using one region of Block RAM (BRAM) of size %size% bytes
+ *
+ * Segments:
+ *
+ * Instructions :    %textsegbegin% -> %textsegend%
+ * Data / BSS   :    %datasegbegin% -> %datasegend%
+ * Stack        :    %stackBegin%
+ */
+
+/* Sections
+ *
+ */
+
+SECTIONS
+{
+	_sp = %stackBegin%;
+
+	. = 0 ;
+
+	.text :
+	{
+		%bootcode%
+		%exceptioncode%
+		*(.*text*)
+	}
+
+	. = %datasegbegin%;
+
+	.data :
+	{
+		*(.rodata*)
+		*(.data*)
+	}
+
+	_gp = ALIGN(16) + 0x0100;
+
+	.got :
+	{
+		*(.got)
+	}
+
+	.sdata :
+	{
+		*(.*sdata*)
+	}
+
+	_bss_start = . ;
+
+	.sbss :
+	{
+		*(.*sbss)
+	}
+
+	.bss :
+	{
+		*(.*bss)
+	}
+
+	_bss_end = . ;
+}
