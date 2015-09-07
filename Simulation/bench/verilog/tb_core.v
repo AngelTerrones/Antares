@@ -1,16 +1,16 @@
 //==================================================================================================
 //  Filename      : tb_core.v
-//  Created On    : 2014-10-02 18:20:53
-//  Last Modified : 2015-06-09 21:05:40
-//  Revision      : 0.1
+//  Created On    : Sun Sep  6 22:43:11 2015
+//  Last Modified : Sun Sep 06 23:00:58 2015
+//  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
 //  Email         : aterrones@usb.ve
 //
-//  Description   : Core testbench.
+//  Description   : Antares core testbench
 //==================================================================================================
 
-`include "musb_defines.v"
+`include "antares_defines.v"
 
 `timescale 1ns / 100ps
 
@@ -49,10 +49,10 @@ module tb_core;
     //--------------------------------------------------------------------------
     // MIPS CORE
     //--------------------------------------------------------------------------
-    musb_core #(
-        .ENABLE_HW_MULT  ( 1 ),
-        .ENABLE_HW_DIV   ( 1 ),
-        .ENABLE_HW_CLO_Z ( 1 )
+    antares_core #(
+        .ENABLE_HW_MULT ( 1 ),
+        .ENABLE_HW_DIV  ( 1 ),
+        .ENABLE_HW_CLOZ ( 1 )
         )
         core(
             // Outputs
@@ -105,7 +105,7 @@ module tb_core;
     //--------------------------------------------------------------------------
     // Monitor
     //--------------------------------------------------------------------------
-    musb_monitor_core monitor0(
+    antares_monitor_core monitor0(
         .halt                ( halted                                ),
         .if_stall            ( core.if_stall                         ),
         .if_flush            ( core.if_exception_flush               ),
@@ -123,12 +123,17 @@ module tb_core;
         .wb_gpr_we           ( core.wb_gpr_we                        ),
         .mem_address         ( core.mem_alu_result                   ),
         .mem_data            ( core.mem_mem_store_data               ),
-        .if_exception_ready  ( core.musb_cpzero0.if_exception_ready  ),
-        .id_exception_ready  ( core.musb_cpzero0.id_exception_ready  ),
-        .ex_exception_ready  ( core.musb_cpzero0.ex_exception_ready  ),
-        .mem_exception_ready ( core.musb_cpzero0.mem_exception_ready ),
+        .if_exception_ready  ( core.antares_cpzero0.if_exception_ready  ),
+        .id_exception_ready  ( core.antares_cpzero0.id_exception_ready  ),
+        .ex_exception_ready  ( core.antares_cpzero0.ex_exception_ready  ),
+        .mem_exception_ready ( core.antares_cpzero0.mem_exception_ready ),
         .clk_core            ( clk_core                              ),
         .clk_bus             ( clk_bus                               ),
         .rst                 ( rst                                   )
     );
 endmodule
+
+// Local Variables:
+// verilog-library-flags:("-y ../../../Hardware/")
+// flycheck-verilator-include-path:("../../../Hardware/")
+// End:
