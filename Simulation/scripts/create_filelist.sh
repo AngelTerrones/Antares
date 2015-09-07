@@ -21,11 +21,11 @@ TESTBENCH_FOLDER=$PROJECT_ROOT/Simulation/bench
 
 # Set Filelist variable
 # Create the file inside $RUN_FOLDER
-mkdir -p build
+mkdir -p $RUN_FOLDER/build
 FILELIST_ICARUS=$RUN_FOLDER/build/filelist.prj
 
 # remove old files
-rm -f build/*
+rm -f $RUN_FOLDER/build/*
 
 #create the new filelist of rtl
 touch $FILELIST_ICARUS
