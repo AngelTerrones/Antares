@@ -1,0 +1,35 @@
+# ignore all bin directories
+# matches "bin" in any subfolder
+bin/
+
+# matches "build" in any subfolder
+build/
+
+# ignore all target directories
+target/
+
+# ignore all out directories
+out/
+
+# ignore all files ending with ~
+*~
+*.~*
+
+# ignore all files in cache folder
+__pycache__
+
+#ignore other files
+*.log
+*.icarus
+*.vvp
+*.out
+*.vcd
+*.txt
+*.tags*
+*.Debug
+*.Release
+*.t2d
+*.pro.user*
+*Makefile*
+bin2hex
+bin2mem
