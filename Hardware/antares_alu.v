@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_alu.v
 //  Created On    : Thu Sep  3 09:14:03 2015
-//  Last Modified : Sun Sep 06 10:33:39 2015
+//  Last Modified : Wed Sep 09 19:25:21 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -46,8 +46,6 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
     reg [63:0]         hilo; // hold the result from MULT instruction
     reg                div_active; // 1 if the divider is currently active.
     reg                hilo_access;        // check access
-    reg [5:0]          clo_result;
-    reg [5:0]          clz_result;
 
     ///-------------------------------------------------------------------------
     // Signal Declaration: wire
@@ -83,6 +81,9 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
     wire [4:0]         shift_shamnt;
     wire               shift_direction;
     wire               shift_sign_extend;
+
+    wire [5:0]         clo_result;
+    wire [5:0]         clz_result;
 
     //--------------------------------------------------------------------------
     // assignments
@@ -243,10 +244,8 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
         end
         // Disable
         else begin
-            always begin
-                clo_result = 6'dx;
-                clz_result = 6'bx;
-            end
+            assign clo_result = 6'dx;
+            assign clz_result = 6'bx;
         end // else: !if(ENABLE_HW_CLOZ)
 
     endgenerate
