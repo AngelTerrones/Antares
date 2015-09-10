@@ -83,7 +83,7 @@ view: .check-VCD
 #-------------------------------------------------------------------------------
 clean:
 	@echo -e ""
-	rm -rf ../out
+	rm -rf out
 	rm -rf build
 	rm -f *.prj
 	rm -f *.log
