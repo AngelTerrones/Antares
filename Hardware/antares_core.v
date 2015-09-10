@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_core.v
 //  Created On    : Sat Sep  5 21:45:33 2015
-//  Last Modified : Sun Sep 06 11:30:33 2015
+//  Last Modified : Wed Sep 09 20:36:42 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -307,7 +307,7 @@ module antares_core #(parameter ENABLE_HW_MULT = 1,
     //--------------------------------------------------------------------------
     // ID stage
     //--------------------------------------------------------------------------
-    antares_reg_file GRP (// Outputs
+    antares_reg_file GPR (// Outputs
                           .gpr_rd_a   (id_gpr_rs[31:0]),
                           .gpr_rd_b   (id_gpr_rt[31:0]),
                           // Inputs
