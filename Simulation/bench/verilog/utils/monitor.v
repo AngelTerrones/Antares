@@ -1,7 +1,7 @@
 //==================================================================================================
-//  Filename      : musb_monitor_core.v
-//  Created On    : 2015-05-28 16:54:03
-//  Last Modified : 2015-06-09 14:24:52
+//  Filename      : monitor.v
+//  Created On    : Wed Sep  9 19:00:41 2015
+//  Last Modified : Wed Sep 09 20:37:00 2015
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -9,20 +9,21 @@
 //
 //  Description   : Core monitor
 //==================================================================================================
+/* verilator lint_off STMTDLY */
 
-`include "musb_defines.v"
+`include "antares_defines.v"
 
 `timescale 1ns / 100ps
 
-`define cycle                   20
-`define TRACE_BUFFER_SIZE       10000000
-`define EXCEPTION_BUFFER_SIZE   10000000
-`define TIMEOUT_DEFAULT         30000
-`define REG_FILE                "register.log"
-`define MEM_DUMP                "memory.log"
-`define TRACE_FILE              "trace.log"
+`define cycle                   20             // ns
+`define TRACE_BUFFER_SIZE       10000000       // bytes
+`define EXCEPTION_BUFFER_SIZE   10000000       // bytes
+`define TIMEOUT_DEFAULT         30000          // For short tests.
+`define REG_FILE                "register.log" // Dump for the register file
+`define MEM_DUMP                "memory.log"   // Memoty dump (instruction + data)
+`define TRACE_FILE              "trace.log"    // instruction trace
 
-module musb_monitor_core(
+module monitor(
     input               halt,
     input               if_stall,
     input               if_flush,
@@ -93,19 +94,19 @@ module musb_monitor_core(
         output   [31:0]    cp0_data;
         begin
             case (cp0_addr)
-                5'd8   : cp0_data = core.musb_cpzero0.BadVAddr;
-                5'd9   : cp0_data = core.musb_cpzero0.Count;
-                5'd11  : cp0_data = core.musb_cpzero0.Compare;
-                5'd12  : cp0_data = core.musb_cpzero0.Status;
-                5'd13  : cp0_data = core.musb_cpzero0.Cause;
-                5'd14  : cp0_data = core.musb_cpzero0.EPC;
-                5'd15  : cp0_data = core.musb_cpzero0.PRId;
-                5'd16  : cp0_data = core.musb_cpzero0.Config1;
-                5'd30  : cp0_data = core.musb_cpzero0.ErrorEPC;
+                5'd8   : cp0_data = core.cpzero0.BadVAddr;
+                5'd9   : cp0_data = core.cpzero0.Count;
+                5'd11  : cp0_data = core.cpzero0.Compare;
+                5'd12  : cp0_data = core.cpzero0.Status;
+                5'd13  : cp0_data = core.cpzero0.Cause;
+                5'd14  : cp0_data = core.cpzero0.EPC;
+                5'd15  : cp0_data = core.cpzero0.PRId;
+                5'd16  : cp0_data = core.cpzero0.Config1;
+                5'd30  : cp0_data = core.cpzero0.ErrorEPC;
                 default: cp0_data = 32'h0000_0000;
-            endcase
+            endcase // case (cp0_addr)
         end
-    endtask
+    endtask // get_cp0_reg
 
     //--------------------------------------------------------------------------
     // Decode the exception cause
@@ -127,9 +128,9 @@ module musb_monitor_core(
                 5'h6    : $sformat(exception_code, "EXC_IBE");
                 5'h0    : $sformat(exception_code, "EXC_Int");
                 default : $sformat(exception_code, "UNKNOWN CAUSE");
-            endcase
+            endcase // case (cause[6:2])
         end
-    endtask
+    endtask // decode_cause
 
     //--------------------------------------------------------------------------
     // Print GPR
@@ -145,7 +146,7 @@ module musb_monitor_core(
             $display("INFO-MONITOR:\tRegister dump: DONE.");
             $fclose(file);
         end
-    endtask
+    endtask // print_gpr
 
     //--------------------------------------------------------------------------
     // Dump the memory
@@ -154,7 +155,7 @@ module musb_monitor_core(
             $writememh(`MEM_DUMP, memory0.mem);
             $display("INFO-MONITOR:\tMemory dump: DONE.");
         end
-    endtask
+    endtask // dump_memory
 
     //--------------------------------------------------------------------------
     // Print trace
@@ -175,7 +176,7 @@ module musb_monitor_core(
             $display("INFO-MONITOR:\tPrint trace: DONE.");
             $fclose(file);
         end
-    endtask
+    endtask // print_trace
 
     //--------------------------------------------------------------------------
     // Decode instruction, and store in a buffer
@@ -202,226 +203,226 @@ module musb_monitor_core(
 
         begin
             if (~rst & ~halt) begin
-                opcode             = instruction[`MUSB_INSTR_OPCODE];
-                op_rs              = instruction[`MUSB_INSTR_RS];
-                op_rt              = instruction[`MUSB_INSTR_RT];
-                op_rd              = instruction[`MUSB_INSTR_RD];
-                op_function        = instruction[`MUSB_INSTR_FUNCT];
-                op_imm16           = instruction[`MUSB_INSTR_IMM16];
-                op_imm26           = instruction[`MUSB_INSTR_IMM26];
-                op_cp0_select      = instruction[`MUSB_INSTR_CP0_SEL];
+                opcode             = instruction[`ANTARES_INSTR_OPCODE];
+                op_rs              = instruction[`ANTARES_INSTR_RS];
+                op_rt              = instruction[`ANTARES_INSTR_RT];
+                op_rd              = instruction[`ANTARES_INSTR_RD];
+                op_function        = instruction[`ANTARES_INSTR_FUNCT];
+                op_imm16           = instruction[`ANTARES_INSTR_IMM16];
+                op_imm26           = instruction[`ANTARES_INSTR_IMM26];
+                op_cp0_select      = instruction[`ANTARES_INSTR_CP0_SEL];
                 instruction_string = 0;
                 wb_register_string = 0;
 
                 //$write("| %-5d ns | 0x%h: | 0x%h | ", $time - 1, id_pc, instruction); // time - 1 (delay)
                 case(opcode)
                     `OP_TYPE_R      :   begin
-                                            case (op_function)
-                                                `FUNCTION_OP_ADD        :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "ADD", op_rd, op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_ADDU       :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "ADDU", op_rd, op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_AND        :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "AND", op_rd, op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_BREAK      :   begin $sformat(instruction_string, "%-10s ", "BREAK"); end
-                                                `FUNCTION_OP_DIV        :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d", "DIV", op_rs, op_rt); end
-                                                `FUNCTION_OP_DIVU       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d", "DIVU", op_rs, op_rt); end
-                                                `FUNCTION_OP_JALR       :   begin $sformat(instruction_string, "%-10s r%-2d", "JALR", op_rs); end
-                                                `FUNCTION_OP_JR         :   begin $sformat(instruction_string, "%-10s r%-2d", "JR", op_rs); end
-                                                `FUNCTION_OP_MFHI       :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d", "MFHI", op_rd);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_MFLO       :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d", "MFLO", op_rd);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_MOVN       :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "MOVN", op_rd, op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_MOVZ       :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "MOVZ", op_rd, op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_MTHI       :   begin $sformat(instruction_string, "%-10s r%-2d", "MTHI", op_rs); end
-                                                `FUNCTION_OP_MTLO       :   begin $sformat(instruction_string, "%-10s r%-2d", "MTLO", op_rs); end
-                                                `FUNCTION_OP_MULT       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d", "MULT", op_rs, op_rt); end
-                                                `FUNCTION_OP_MULTU      :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d", "MULTU", op_rs, op_rt); end
-                                                `FUNCTION_OP_NOR        :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "NOR", op_rd, op_rs, op_rt);
-                                                                                  $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                            end
-                                                `FUNCTION_OP_OR         :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "OR", op_rd, op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_SLL        :   begin
-                                                                                  if (instruction == 32'b0) begin
-                                                                                      $sformat(instruction_string, "%-10s", "NOP");
-                                                                                  end
-                                                                                  else begin
-                                                                                      $sformat(instruction_string, "%-10s r%-2d, r%-2d, %0d", "SLL", op_rd, op_rt, op_imm16[`MUSB_INSTR_SHAMT]);
-                                                                                      if (~wb_instruction_flushed) begin
-                                                                                          $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                      end
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_SLLV       :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SLLV", op_rd, op_rt, op_rs);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_SLT        :   begin
-                                                                                  $sformat(instruction_string, "%-10s t\tr%-2d, r%-2d, r%-2d", "SLT", op_rd, op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_SLTU       :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SLTU", op_rd, op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_SRA        :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, %0d  ", "SRA", op_rd, op_rt, op_imm16[`MUSB_INSTR_SHAMT]);
-                                                                                  $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                            end
-                                                `FUNCTION_OP_SRAV       :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SRAV", op_rd, op_rt, op_rs);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_SRL        :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, %0d  ", "SRL", op_rd, op_rt, op_imm16[`MUSB_INSTR_SHAMT]);
-                                                                                  $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                            end
-                                                `FUNCTION_OP_SRLV       :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SRLV", op_rd, op_rt, op_rs);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_SUB        :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SUB", op_rd, op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_SUBU       :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SUBU", op_rd, op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_SYSCALL    :   begin $sformat(instruction_string, "%-10s ", "SYSCALL"); end
-                                                `FUNCTION_OP_TEQ        :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TEQ", op_rs, op_rt); end
-                                                `FUNCTION_OP_TGE        :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TGE", op_rs, op_rt); end
-                                                `FUNCTION_OP_TGEU       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TGEU", op_rs, op_rt); end
-                                                `FUNCTION_OP_TLT        :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TLT", op_rs, op_rt); end
-                                                `FUNCTION_OP_TLTU       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TLTU", op_rs, op_rt); end
-                                                `FUNCTION_OP_TNE        :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TNE", op_rs, op_rt); end
-                                                `FUNCTION_OP_XOR        :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "XOR", op_rd, op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                default                 :   begin $sformat(instruction_string, "Invalid R instruction"); end
-                                            endcase
-                                        end
+                        case (op_function)
+                            `FUNCTION_OP_ADD        :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "ADD", op_rd, op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_ADDU       :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "ADDU", op_rd, op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_AND        :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "AND", op_rd, op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_BREAK      :   begin $sformat(instruction_string, "%-10s ", "BREAK"); end
+                            `FUNCTION_OP_DIV        :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d", "DIV", op_rs, op_rt); end
+                            `FUNCTION_OP_DIVU       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d", "DIVU", op_rs, op_rt); end
+                            `FUNCTION_OP_JALR       :   begin $sformat(instruction_string, "%-10s r%-2d", "JALR", op_rs); end
+                            `FUNCTION_OP_JR         :   begin $sformat(instruction_string, "%-10s r%-2d", "JR", op_rs); end
+                            `FUNCTION_OP_MFHI       :   begin
+                                $sformat(instruction_string, "%-10s r%-2d", "MFHI", op_rd);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_MFLO       :   begin
+                                $sformat(instruction_string, "%-10s r%-2d", "MFLO", op_rd);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_MOVN       :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "MOVN", op_rd, op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_MOVZ       :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "MOVZ", op_rd, op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_MTHI       :   begin $sformat(instruction_string, "%-10s r%-2d", "MTHI", op_rs); end
+                            `FUNCTION_OP_MTLO       :   begin $sformat(instruction_string, "%-10s r%-2d", "MTLO", op_rs); end
+                            `FUNCTION_OP_MULT       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d", "MULT", op_rs, op_rt); end
+                            `FUNCTION_OP_MULTU      :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d", "MULTU", op_rs, op_rt); end
+                            `FUNCTION_OP_NOR        :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "NOR", op_rd, op_rs, op_rt);
+                                $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                            end
+                            `FUNCTION_OP_OR         :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "OR", op_rd, op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_SLL        :   begin
+                                if (instruction == 32'b0) begin
+                                    $sformat(instruction_string, "%-10s", "NOP");
+                                end
+                                else begin
+                                    $sformat(instruction_string, "%-10s r%-2d, r%-2d, %0d", "SLL", op_rd, op_rt, op_imm16[`ANTARES_INSTR_SHAMT]);
+                                    if (~wb_instruction_flushed) begin
+                                        $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                    end
+                                end
+                            end // case: `FUNCTION_OP_SLL
+                            `FUNCTION_OP_SLLV       :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SLLV", op_rd, op_rt, op_rs);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_SLT        :   begin
+                                $sformat(instruction_string, "%-10s t\tr%-2d, r%-2d, r%-2d", "SLT", op_rd, op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_SLTU       :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SLTU", op_rd, op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_SRA        :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, %0d  ", "SRA", op_rd, op_rt, op_imm16[`ANTARES_INSTR_SHAMT]);
+                                $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                            end
+                            `FUNCTION_OP_SRAV       :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SRAV", op_rd, op_rt, op_rs);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_SRL        :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, %0d  ", "SRL", op_rd, op_rt, op_imm16[`ANTARES_INSTR_SHAMT]);
+                                $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                            end
+                            `FUNCTION_OP_SRLV       :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SRLV", op_rd, op_rt, op_rs);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_SUB        :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SUB", op_rd, op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_SUBU       :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "SUBU", op_rd, op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_SYSCALL    :   begin $sformat(instruction_string, "%-10s ", "SYSCALL"); end
+                            `FUNCTION_OP_TEQ        :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TEQ", op_rs, op_rt); end
+                            `FUNCTION_OP_TGE        :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TGE", op_rs, op_rt); end
+                            `FUNCTION_OP_TGEU       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TGEU", op_rs, op_rt); end
+                            `FUNCTION_OP_TLT        :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TLT", op_rs, op_rt); end
+                            `FUNCTION_OP_TLTU       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TLTU", op_rs, op_rt); end
+                            `FUNCTION_OP_TNE        :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "TNE", op_rs, op_rt); end
+                            `FUNCTION_OP_XOR        :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d, r%-2d", "XOR", op_rd, op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            default                 :   begin $sformat(instruction_string, "Invalid R instruction"); end
+                        endcase // case (op_function)
+                    end // case: `OP_TYPE_R
                     `OP_TYPE_R2     :   begin
-                                            case (op_function)
-                                                `FUNCTION_OP_CLO        :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "CLO", op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_CLZ        :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "CLZ", op_rs, op_rt);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `FUNCTION_OP_MADD       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "MADD", op_rs, op_rt); end
-                                                `FUNCTION_OP_MADDU      :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "MADDU", op_rs, op_rt); end
-                                                `FUNCTION_OP_MSUB       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "MSUB", op_rs, op_rt); end
-                                                `FUNCTION_OP_MSUBU      :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "MSUBU", op_rs, op_rt); end
-                                                default                 :   begin $sformat(instruction_string, "Invalid R2 instruction"); end
-                                            endcase
-                                        end
+                        case (op_function)
+                            `FUNCTION_OP_CLO        :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "CLO", op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_CLZ        :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "CLZ", op_rs, op_rt);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `FUNCTION_OP_MADD       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "MADD", op_rs, op_rt); end
+                            `FUNCTION_OP_MADDU      :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "MADDU", op_rs, op_rt); end
+                            `FUNCTION_OP_MSUB       :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "MSUB", op_rs, op_rt); end
+                            `FUNCTION_OP_MSUBU      :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d  ", "MSUBU", op_rs, op_rt); end
+                            default                 :   begin $sformat(instruction_string, "Invalid R2 instruction"); end
+                        endcase // case (op_function)
+                    end // case: `OP_TYPE_R2
                     `OP_TYPE_REGIMM :   begin
-                                            case (op_rt)
-                                                `RT_OP_BGEZ             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "BGEZ", op_rs,  $signed(id_pc) + $signed({op_imm16, 2'b0}) + 4); end
-                                                `RT_OP_BGEZAL           :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "BGEZAL", op_rs,  $signed(id_pc) + $signed({op_imm16, 2'b0}) + 4); end
-                                                `RT_OP_BLTZ             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "BLTZ", op_rs,  $signed(id_pc) + $signed({op_imm16, 2'b0}) + 4); end
-                                                `RT_OP_BLTZAL           :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "BLTZAL", op_rs,  $signed(id_pc) + $signed({op_imm16, 2'b0}) + 4); end
-                                                `RT_OP_TEQI             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TEQI", op_rs, op_imm16); end
-                                                `RT_OP_TGEI             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TGEI", op_rs, op_imm16); end
-                                                `RT_OP_TGEIU            :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TGEIU", op_rs, op_imm16); end
-                                                `RT_OP_TLTI             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TLTI", op_rs, op_imm16); end
-                                                `RT_OP_TLTIU            :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TLTIU", op_rs, op_imm16); end
-                                                `RT_OP_TNEI             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TNEI", op_rs, op_imm16); end
-                                                default                 :   begin $sformat(instruction_string, "Invalid REGIMM instruction"); end
-                                            endcase
-                                        end
+                        case (op_rt)
+                            `RT_OP_BGEZ             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "BGEZ", op_rs,  $signed(id_pc) + $signed({op_imm16, 2'b0}) + 4); end
+                            `RT_OP_BGEZAL           :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "BGEZAL", op_rs,  $signed(id_pc) + $signed({op_imm16, 2'b0}) + 4); end
+                            `RT_OP_BLTZ             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "BLTZ", op_rs,  $signed(id_pc) + $signed({op_imm16, 2'b0}) + 4); end
+                            `RT_OP_BLTZAL           :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "BLTZAL", op_rs,  $signed(id_pc) + $signed({op_imm16, 2'b0}) + 4); end
+                            `RT_OP_TEQI             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TEQI", op_rs, op_imm16); end
+                            `RT_OP_TGEI             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TGEI", op_rs, op_imm16); end
+                            `RT_OP_TGEIU            :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TGEIU", op_rs, op_imm16); end
+                            `RT_OP_TLTI             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TLTI", op_rs, op_imm16); end
+                            `RT_OP_TLTIU            :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TLTIU", op_rs, op_imm16); end
+                            `RT_OP_TNEI             :   begin $sformat(instruction_string, "%-10s r%-2d, %0d", "TNEI", op_rs, op_imm16); end
+                            default                 :   begin $sformat(instruction_string, "Invalid REGIMM instruction"); end
+                        endcase // case (op_rt)
+                    end // case: `OP_TYPE_REGIMM
                     `OP_TYPE_CP0    :   begin
-                                            case (op_rs)
-                                                `RS_OP_MFC              :   begin
-                                                                                  $sformat(instruction_string, "%-10s r%-2d, r%-2d", "MFC0", op_rt, op_rd);
-                                                                                  if (~wb_instruction_flushed) begin
-                                                                                      $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                                                                  end
-                                                                            end
-                                                `RS_OP_MTC              :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d", "MTC0", op_rt, op_rd); end
-                                                `RS_OP_ERET             :   begin $sformat(instruction_string, "%-10s", "ERET"); end
-                                                default                 :   begin $sformat(instruction_string, "Invalid CP0 instruction"); end
-                                            endcase
-                                        end
+                        case (op_rs)
+                            `RS_OP_MFC              :   begin
+                                $sformat(instruction_string, "%-10s r%-2d, r%-2d", "MFC0", op_rt, op_rd);
+                                if (~wb_instruction_flushed) begin
+                                    $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                                end
+                            end
+                            `RS_OP_MTC              :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d", "MTC0", op_rt, op_rd); end
+                            `RS_OP_ERET             :   begin $sformat(instruction_string, "%-10s", "ERET"); end
+                            default                 :   begin $sformat(instruction_string, "Invalid CP0 instruction"); end
+                        endcase // case (op_rs)
+                    end // case: `OP_TYPE_CP0
                     `OP_ADDI        :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, r%-2d, %-0d", "ADDI", op_rt, op_rs, op_imm16);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, r%-2d, %-0d", "ADDI", op_rt, op_rs, op_imm16);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                        end
+                    end
                     `OP_ADDIU       :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, r%-2d, %-0d", "ADDIU", op_rt, op_rs, op_imm16);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, r%-2d, %-0d", "ADDIU", op_rt, op_rs, op_imm16);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                        end
+                    end
                     `OP_ANDI        :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, r%-2d, 0x%-h", "ANDI", op_rt, op_rs, op_imm16);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, r%-2d, 0x%-h", "ANDI", op_rt, op_rs, op_imm16);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                        end
+                    end
                     `OP_BEQ         :   begin $sformat(instruction_string, "%-10s r%-2d, r%-2d, 0x%-0h", "BEQ", op_rt, op_rs, $signed(id_pc) + $signed({op_imm16, 2'b0}) + 4); end
                     `OP_BGTZ        :   begin $sformat(instruction_string, "%-10s r%-2d, 0x%-0h", "BGTZ", op_rs, $signed(id_pc) + $signed({op_imm16, 2'b0}) + 4); end
                     `OP_BLEZ        :   begin $sformat(instruction_string, "%-10s r%-2d, 0x%-0h", "BLEZ", op_rs, $signed(id_pc) + $signed({op_imm16, 2'b0}) + 4); end
@@ -429,105 +430,105 @@ module musb_monitor_core(
                     `OP_J           :   begin $sformat(instruction_string, "%-10s 0x%-h ", "J", {id_pc[31:28], op_imm26, 2'b0}); end
                     `OP_JAL         :   begin $sformat(instruction_string, "%-10s 0x%-h ", "JAL", {id_pc[31:28], op_imm26, 2'b0}); end
                     `OP_LB          :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LB", op_rt, op_imm16, op_rs);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LB", op_rt, op_imm16, op_rs);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
+                        end
+                    end
                     `OP_LBU         :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LBU", op_rt, op_imm16, op_rs);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LBU", op_rt, op_imm16, op_rs);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
+                        end
+                    end
                     `OP_LH          :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LH", op_rt, op_imm16, op_rs);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LH", op_rt, op_imm16, op_rs);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
+                        end
+                    end
                     `OP_LHU         :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LHU", op_rt, op_imm16, op_rs);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LHU", op_rt, op_imm16, op_rs);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
+                        end
+                    end
                     `OP_LL          :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LL", op_rt, op_imm16, op_rs);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LL", op_rt, op_imm16, op_rs);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
+                        end
+                    end
                     `OP_LUI         :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, %-5d", "LUI", op_rt, op_imm16);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, %-5d", "LUI", op_rt, op_imm16);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                        end
+                    end
                     `OP_LW          :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LW", op_rt, op_imm16, op_rs);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "LW", op_rt, op_imm16, op_rs);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= mem[0x%h] = 0x%h (%0d)", wb_register, mem_address, wb_data, wb_data);
+                        end
+                    end
                     `OP_ORI         :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, r%-2d, 0x%0h", "ORI", op_rt, op_rs, op_imm16);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, r%-2d, 0x%0h", "ORI", op_rt, op_rs, op_imm16);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                        end
+                    end
                     `OP_SB          :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "SB", op_rt, op_imm16, op_rs);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "mem[0x%h] <= 0x%2h", mem_address, mem_store_data & 32'hFF);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "SB", op_rt, op_imm16, op_rs);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "mem[0x%h] <= 0x%2h", mem_address, mem_store_data & 32'hFF);
+                        end
+                    end
                     `OP_SC          :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "SC", op_rt, op_imm16, op_rs);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "mem[0x%h] <= 0x%h (%0d)", mem_address, mem_store_data, mem_store_data);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "SC", op_rt, op_imm16, op_rs);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "mem[0x%h] <= 0x%h (%0d)", mem_address, mem_store_data, mem_store_data);
+                        end
+                    end
                     `OP_SH          :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "SH", op_rt, op_imm16, op_rs);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "mem[0x%h] <= 0x%4h", mem_address, mem_store_data & 32'hFFFF);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "SH", op_rt, op_imm16, op_rs);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "mem[0x%h] <= 0x%4h", mem_address, mem_store_data & 32'hFFFF);
+                        end
+                    end
                     `OP_SLTI        :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, r%-2d, %-0d", "SLTI", op_rt, op_rs, op_imm16);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, r%-2d, %-0d", "SLTI", op_rt, op_rs, op_imm16);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                        end
+                    end
                     `OP_SLTIU       :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, r%-2d, %-0d", "SLTIU", op_rt, op_rs, op_imm16);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, r%-2d, %-0d", "SLTIU", op_rt, op_rs, op_imm16);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                        end
+                    end
                     `OP_SW          :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "SW", op_rt, op_imm16, op_rs);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "mem[0x%h] <= 0x%h (%0d)", mem_address, mem_store_data, mem_store_data);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, %0d(r%-2d)", "SW", op_rt, op_imm16, op_rs);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "mem[0x%h] <= 0x%h (%0d)", mem_address, mem_store_data, mem_store_data);
+                        end
+                    end
                     `OP_XORI        :   begin
-                                              $sformat(instruction_string, "%-10s r%-2d, r%-2d, 0x%0h","XORI", op_rt, op_rs, op_imm16);
-                                              if (~wb_instruction_flushed) begin
-                                                $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
-                                              end
-                                        end
+                        $sformat(instruction_string, "%-10s r%-2d, r%-2d, 0x%0h","XORI", op_rt, op_rs, op_imm16);
+                        if (~wb_instruction_flushed) begin
+                            $sformat(wb_register_string, "r%-2d <= 0x%h ( %-d ) | WE = %0d", wb_register, wb_data, wb_data, wb_we);
+                        end
+                    end
                     default         :   begin $sformat(instruction_string, "Invalid instruction"); end
-                endcase
+                endcase // case (opcode)
 
                 // store info to buffer
                 $sformat(trace, "| %9d | 0x%h: | 0x%h  | %-30s | %-48s | %-7s |", $time - 1, id_pc, instruction, instruction_string, wb_register_string, (wb_instruction_flushed) ? "yes" : " "); // time - 1 (delay)
                 trace_buffer[trace_fill_counter] = trace;
                 trace_fill_counter = trace_fill_counter + 1;
-            end
+            end // if (~rst & ~halt)
         end
-    endtask
+    endtask // decode_instruction
 
     //--------------------------------------------------------------------------
     // Decode exception and store in a buffer
@@ -548,7 +549,7 @@ module musb_monitor_core(
                 exception_buffer_counter = exception_buffer_counter + 1;
             end
         end
-    endtask
+    endtask // decode_exception
 
     //--------------------------------------------------------------------------
     // print stats
@@ -574,7 +575,7 @@ module musb_monitor_core(
             dump_memory();
             print_gpr();
         end
-    endtask
+    endtask // print_stats
 
     //--------------------------------------------------------------------------
     // Initial
@@ -603,7 +604,7 @@ module musb_monitor_core(
     //--------------------------------------------------------------------------
     always @(posedge clk_core) begin
         #1
-        if((wb_exception_pc != 32'b0 | wb_instruction != 32'b0) & ~wb_instruction_stalled )begin       // ignore first nops in the pipeline & bubbles
+          if((wb_exception_pc != 32'b0 | wb_instruction != 32'b0) & ~wb_instruction_stalled )begin       // ignore first nops in the pipeline & bubbles
             decode_instruction(wb_exception_pc,
                                wb_instruction,
                                wb_gpr_wa,
@@ -612,8 +613,8 @@ module musb_monitor_core(
                                wb_mem_address,
                                wb_mem_store_data
                                );
-        end
-    end
+          end
+    end // always @ (posedge clk_core)
 
     //--------------------------------------------------------------------------
     // Log exceptions
@@ -643,7 +644,7 @@ module musb_monitor_core(
         mem_instruction_flushed <= (rst) ? 1'b0 : ((mem_stall) ? mem_instruction_flushed : ex_instruction_flushed  | ex_flush);
         wb_instruction_stalled  <= (rst) ? 1'b0 : ((wb_stall)  ? wb_instruction_stalled  : mem_instruction_stalled | mem_stall);
         wb_instruction_flushed  <= (rst) ? 1'b0 : ((wb_stall)  ? wb_instruction_flushed  : mem_instruction_flushed | mem_flush);
-    end
+    end // always @ (posedge clk_core)
 
     //--------------------------------------------------------------------------
     // Start Simulation
@@ -655,18 +656,18 @@ module musb_monitor_core(
         $display("--------------------------------------------------------------------------");
         $display();
 
-        `ifdef TEST
+`ifdef TEST
             $display("INFO-MONITOR:\tUsing the <%s> test", `TEST);
-        `endif
+`endif
 
         // dump the wave file
-        `ifdef NODUMP
+`ifdef NODUMP
             $display("INFO-MONITOR:\tDump of variables: DISABLED.");
-        `else
+`else
             $display("INFO-MONITOR:\tDump of variables: ENABLED.");
             $dumpfile("tb_core.vcd");
             $dumpvars(0, tb_core);      // check this
-        `endif
+`endif
 
         // Reset
         $display("INFO-MONITOR:\tReset assertion (Time: %0d ns).", $time);
@@ -675,17 +676,17 @@ module musb_monitor_core(
         $display("INFO-MONITOR:\tReset deassertion (Time: %0d ns).", $time);
 
         // wait until end
-        `ifdef TIMEOUT
+`ifdef TIMEOUT
             $display("INFO-MONITOR:\tUser timeout value: %d cycles", `TIMEOUT);
             $display("INFO-MONITOR:\tCPU (core) frequency: %d MHz", 1000/`cycle);
             $display();
             #(`TIMEOUT*`cycle)
-        `else
+`else
             $display("INFO-MONITOR:\tUsind default timeout value: %d cycles", `TIMEOUT_DEFAULT);
             $display("INFO-MONITOR:\tCPU (core) frequency: %d MHz", 1000/`cycle);
             $display();
             #(`TIMEOUT_DEFAULT*`cycle)
-        `endif
+`endif // !`ifdef TIMEOUT
 
         // Timeout. Abort
         print_stats();
@@ -694,7 +695,7 @@ module musb_monitor_core(
         $display("--------------------------------------------------------------------------");
         $display("\n\n");
         $finish;
-    end
+    end // initial begin
 
     //--------------------------------------------------------------------------
     // Exit 0: Stop Simulation
@@ -709,5 +710,10 @@ module musb_monitor_core(
             $display("\n\n");
             $finish;
         end
-    end
-endmodule
+    end // always @ (negedge clk_core)
+endmodule // monitor
+
+// Local Variables:
+// verilog-library-flags:("-y ../../../../Hardware/ -y utils/")
+// flycheck-verilator-include-path:("../../../../Hardware/" "utils/")
+// End:
