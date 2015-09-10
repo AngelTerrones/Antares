@@ -14,8 +14,11 @@
 #-------------------------------------------------------------------------------
 # Folders
 #-------------------------------------------------------------------------------
-SIM_FOLDER=../out
-UTIL_FOLDER=$(cd ../../Software/utils; pwd)
+CURRENT_FOLDER="$(pwd)"
+PROJECT_ROOT="${CURRENT_FOLDER%/Simulation*}"
+SIM_FOLDER=$PROJECT_ROOT/Simulation/run/out
+UTIL_FOLDER=$PROJECT_ROOT/Software/utils
+C_PROJECT_FOLDER=$PROJECT_ROOT/Simulation/tests/c
 
 #-------------------------------------------------------------------------------
 # MIPS compiler
@@ -33,7 +36,7 @@ if [ $# -ne $EXPECTED_ARGS ]; then
     echo
     echo -e "ERROR      : wrong number of arguments"
     echo -e "USAGE      : compile_c_test <test name>"
-    echo -e "Example    : compile_c_test musb-addiu"
+    echo -e "Example    : compile_c_test factorial"
     echo
     exit 1
 fi
@@ -41,7 +44,7 @@ fi
 #-------------------------------------------------------------------------------
 # Check if file exist
 #-------------------------------------------------------------------------------
-c_project=../tests/c/$1;
+c_project=$C_PROJECT_FOLDE/$1;
 
 if [ ! -e ${asm} ]; then
     echo -e "ERROR:\tC project doesn't exist: ${c_project}"

@@ -14,9 +14,13 @@
 #-------------------------------------------------------------------------------
 # Folders
 #-------------------------------------------------------------------------------
-TEMPLATES_FOLDER=../../Software/templates;
-BUILD_FOLDER=../out/tmp;
-UTIL_FOLDER=$(cd ../../Software/utils; pwd)
+CURRENT_FOLDER="$(pwd)"
+PROJECT_ROOT="${CURRENT_FOLDER%/Simulation*}"
+SIM_FOLDER=$PROJECT_ROOT/Simulation/run/out
+UTIL_FOLDER=$PROJECT_ROOT/Software/utils
+TEMPLATES_FOLDER=$PROJECT_ROOT/Software/templates;
+BUILD_FOLDER=$SIM_FOLDER/build;
+ASM_TEST_FOLDER=$PROJECT_ROOT/Simulation/tests/asm
 
 #-------------------------------------------------------------------------------
 # MIPS compiler
@@ -33,8 +37,8 @@ EXPECTED_ARGS=3
 if [ $# -ne $EXPECTED_ARGS ]; then
     echo
     echo -e "ERROR      : wrong number of arguments"
-    echo -e "USAGE      : compile_test <test name> <mem size> <data size>"
-    echo -e "Example    : compile_test musb-addiu 2048 1024"
+    echo -e "USAGE      : compile_test <test name> <mem size (bytes)> <data size (bytes)>"
+    echo -e "Example    : compile_test antares-addiu 2048 1024"
     echo
     exit 1
 fi
@@ -42,7 +46,7 @@ fi
 #-------------------------------------------------------------------------------
 # Check if file exist
 #-------------------------------------------------------------------------------
-asm=../tests/asm/$1.s;
+asm=$ASM_TEST_FOLDER/$1.s;
 
 if [ ! -e ${asm} ]; then
     echo -e "ERROR:\tAssembler file doesn't exist: ${asm}"
@@ -100,7 +104,7 @@ sed -i "s/%datasegbegin%/${DATA_BEGIN}/g" ${BUILD_FOLDER}/makefile
 sed -i "s/%padsize%/${PAD_SIZE}/g" ${BUILD_FOLDER}/makefile
 
 
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Build utils if necessary:
 # bin2mem & bin2hex
 #-------------------------------------------------------------------------------
@@ -123,4 +127,4 @@ echo -e "-----------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 # Copy test to out folder
 #-------------------------------------------------------------------------------
-mv ${BUILD_FOLDER}/bin/$1.mem ${BUILD_FOLDER}/../mem.hex
+mv ${BUILD_FOLDER}/bin/$1.mem ${SIM_FOLDER}/mem.hex
