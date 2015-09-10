@@ -12,8 +12,8 @@
 
 # Set the folders
 
-SCRIPT_FOLDER="$(pwd)"
-PROJECT_ROOT="${SCRIPT_FOLDER%/Simulation*}"
+CURRENT_FOLDER="$(pwd)"
+PROJECT_ROOT="${CURRENT_FOLDER%/Simulation*}"
 
 RTL_FOLDER=$PROJECT_ROOT/Hardware
 RUN_FOLDER=$PROJECT_ROOT/Simulation/run
