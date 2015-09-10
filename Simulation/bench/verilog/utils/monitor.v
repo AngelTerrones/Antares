@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : monitor.v
 //  Created On    : Wed Sep  9 19:00:41 2015
-//  Last Modified : Wed Sep 09 20:37:00 2015
+//  Last Modified : Wed Sep 09 23:28:26 2015
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -671,7 +671,7 @@ module monitor(
 
         // Reset
         $display("INFO-MONITOR:\tReset assertion (Time: %0d ns).", $time);
-        #(5*`cycle - 5)
+        #(5*`cycle + 5)
         rst <= 0;
         $display("INFO-MONITOR:\tReset deassertion (Time: %0d ns).", $time);
 
