@@ -14,7 +14,10 @@
 #-------------------------------------------------------------------------------
 # Folders
 #-------------------------------------------------------------------------------
-OUT_FOLDER=../out;
+CURRENT_FOLDER="$(pwd)"
+PROJECT_ROOT="${CURRENT_FOLDER%/Simulation*}"
+OUT_FOLDER=$PROJECT_ROOT/Simulation/run/out
+TESTBENCH_FOLDER=$PROJECT_ROOT/Simulation/bench
 
 #-------------------------------------------------------------------------------
 # Parameter Check
@@ -33,7 +36,7 @@ fi
 #-------------------------------------------------------------------------------
 # Check if filelist exist
 #-------------------------------------------------------------------------------
-tb=../bench/verilog/$1.v;
+tb=$TESTBENCH_FOLDER/verilog/$1.v;
 
 if [ ! -e ${tb} ]; then
     echo
@@ -52,7 +55,7 @@ fi
 #-------------------------------------------------------------------------------
 # Compile testbench
 #-------------------------------------------------------------------------------
-mkdir -p ../out
+mkdir -p $OUT_FOLDER
 echo -e "--------------------------------------------------------------------------"
 echo -e "INFO:\tCompiling Testbench: $(readlink -f ${tb})"
 
@@ -64,7 +67,7 @@ else
 fi
 
 # compile testbench, use include list, and generate vvp file
-if !(iverilog -c$3 -s $1 -o ../out/$1.vvp -DTIMEOUT=$4 ${NODUMP} -DTEST=\"$2\") then
+if !(iverilog -c$3 -s $1 -o $OUT_FOLDER/$1.vvp -DTIMEOUT=$4 ${NODUMP} -DTEST=\"$2\") then
     echo -e "ERROR:\tCompile error: TB = $(readlink -f ${tb})"
     echo -e "--------------------------------------------------------------------------"
     exit 1
@@ -79,7 +82,7 @@ echo -e "-----------------------------------------------------------------------
 echo -e "INFO:\tStart Verilog simulation."
 echo -e "--------------------------------------------------------------------------"
 #cp $2 $3
-cd ../out
+cd $OUT_FOLDER
 if !(vvp $1.vvp) then
     echo
     echo -e "ERROR -- Simulation error. Check input files: TB=$1, MIF=$2"
