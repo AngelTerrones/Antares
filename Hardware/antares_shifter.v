@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_shifter.v
 //  Created On    : Wed Sep  2 09:04:04 2015
-//  Last Modified : Fri Sep 04 10:16:51 2015
+//  Last Modified : Wed Sep 09 23:08:05 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -51,7 +51,7 @@ module antares_shifter (/*AUTOARG*/
     integer       index1;
     // first inversion: input data
     always @ (*) begin
-        for (index0 = 0; index0 < 32; index1 = index0 + 1) begin
+        for (index0 = 0; index0 < 32; index0 = index0 + 1) begin
             input_inv[31 - index0] = shift_input_data[index0];
         end
     end
