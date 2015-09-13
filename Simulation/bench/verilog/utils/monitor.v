@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : monitor.v
 //  Created On    : Wed Sep  9 19:00:41 2015
-//  Last Modified : Wed Sep 09 23:28:26 2015
+//  Last Modified : Sat Sep 12 20:55:29 2015
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -557,16 +557,15 @@ module monitor(
         integer index;
 
         begin
-            $display();
             $display("INFO-MONITOR:\tHalt signal assertion (Time: %0d ns).", $time - 1);
 
             if(exception_buffer_counter != 0) begin
                 $display("INFO-MONITOR:\tPrinting exceptions:");
-                $display("");
+                $display("------------");
                 for(index = 0; index < exception_buffer_counter; index = index + 1) begin
                     $display("%-0s", exception_buffer[index]);
                 end
-                $display("");
+                $display("------------");
             end
 
             $display("INFO-MONITOR:\tPrinting program trace, performing the memory dump, and the register dump.");
@@ -574,6 +573,7 @@ module monitor(
             print_trace();
             dump_memory();
             print_gpr();
+            $display();
         end
     endtask // print_stats
 
@@ -592,11 +592,11 @@ module monitor(
     // clock
     //--------------------------------------------------------------------------
     always  begin
-        #(`cycle/2) clk_core <= !clk_core;      // Core clock
+        #(`cycle/2) clk_core = !clk_core;      // Core clock
     end
 
     always  begin
-        #(`cycle/4) clk_bus <= !clk_bus;        // Bus clock = 2*Core clock
+        #(`cycle/4) clk_bus = !clk_bus;        // Bus clock = 2*Core clock
     end
 
     //--------------------------------------------------------------------------
@@ -677,17 +677,16 @@ module monitor(
 
         // wait until end
 `ifdef TIMEOUT
-            $display("INFO-MONITOR:\tUser timeout value: %d cycles", `TIMEOUT);
-            $display("INFO-MONITOR:\tCPU (core) frequency: %d MHz", 1000/`cycle);
-            $display();
-            #(`TIMEOUT*`cycle)
+        $display("INFO-MONITOR:\tUser timeout value: %0d cycles", `TIMEOUT);
+        $display("INFO-MONITOR:\tCPU (core) frequency: %0d MHz", 1000/`cycle);
+        $display("------------");
+        #(`TIMEOUT*`cycle)
 `else
-            $display("INFO-MONITOR:\tUsind default timeout value: %d cycles", `TIMEOUT_DEFAULT);
-            $display("INFO-MONITOR:\tCPU (core) frequency: %d MHz", 1000/`cycle);
-            $display();
-            #(`TIMEOUT_DEFAULT*`cycle)
+        $display("INFO-MONITOR:\tUsind default timeout value: %d cycles", `TIMEOUT_DEFAULT);
+        $display("INFO-MONITOR:\tCPU (core) frequency: %d MHz", 1000/`cycle);
+        $display("------------");
+        #(`TIMEOUT_DEFAULT*`cycle)
 `endif // !`ifdef TIMEOUT
-
         // Timeout. Abort
         print_stats();
         $display("--------------------------------------------------------------------------");
