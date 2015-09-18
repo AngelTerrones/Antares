@@ -15,12 +15,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-
-// Typedefs
-// -----------------------------------------------------------------------------
-typedef enum { false, true } bool;
-
-
 // Function declaration
 // -----------------------------------------------------------------------------
 void         help           (void);
@@ -95,7 +89,7 @@ int main(int argc, char **argv){
         fclose(file);
         exit(1);
     }
-    if(fread(inputData, 1, fileSize, file) != fileSize){
+    if(fread(inputData, 1, fileSize, file) != (unsigned long)fileSize){
         fprintf(stderr, "Error reading input file.\n");
         free(inputData);
         fclose(file);
@@ -151,7 +145,7 @@ int main(int argc, char **argv){
 
 // Print help: How to use the program.
 void help(void){
-    char *helpText = "Usage: bin2hex [-p <pad lenght>] [-b (Big Endian)] <input> <output>\n";
+    const char *helpText = "Usage: bin2hex [-p <pad lenght>] [-b (Big Endian)] <input> <output>\n";
     printf("%s\n", helpText);
     exit(1);
 }
