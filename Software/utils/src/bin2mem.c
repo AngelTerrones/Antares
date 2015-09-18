@@ -16,12 +16,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-
-// Typedefs
-// -----------------------------------------------------------------------------
-typedef enum { false, true } bool;
-
-
 // Function declaration
 // -----------------------------------------------------------------------------
 void help     (void);
@@ -79,7 +73,7 @@ int main(int argc, char **argv){
     }
 
     // copy text segment
-    if(fwrite((void*)textBuffer, 1, textSize, file) != textSize){
+    if(fwrite((void*)textBuffer, 1, textSize, file) != (unsigned long)textSize){
         fprintf(stderr, "Error writing text segment to output file.\n");
         exit(1);
     }
@@ -95,7 +89,7 @@ int main(int argc, char **argv){
     }
 
     // copy data segment
-    if(fwrite((void*)dataBuffer, 1, dataSize, file) != dataSize){
+    if(fwrite((void*)dataBuffer, 1, dataSize, file) != (unsigned long)dataSize){
         fprintf(stderr, "Error writing data segment to output file.\n");
         exit(1);
     }
@@ -104,7 +98,7 @@ int main(int argc, char **argv){
     dataPad = ((dataSize % 4) != 0) ? 4 - (dataSize % 4) : 0;
     if(dataPad != 0){
         memset((void *)dataBuffer, 0, 4);
-        if(fwrite((void*)dataBuffer, 1, dataPad, file) != dataPad){
+        if(fwrite((void*)dataBuffer, 1, dataPad, file) != (unsigned long)dataPad){
             fprintf(stderr, "Error writing 0 (pad to end) to output file.\n");
             exit(1);
         }
@@ -118,7 +112,7 @@ int main(int argc, char **argv){
 
 // Print help: How to use the program.
 void help(void){
-    char *helpText = "Usage: bin2mem [-d <data start address>] <text segment> <data segment> <output file>\n";
+    const char *helpText = "Usage: bin2mem [-d <data start address>] <text segment> <data segment> <output file>\n";
     printf("%s\n", helpText);
     exit(1);
 }
@@ -146,7 +140,7 @@ void readFile(char *name, int *size, char **buffer){
         fclose(file);
         exit(1);
     }
-    if(fread(*buffer, 1, *size, file) != *size){
+    if(fread(*buffer, 1, *size, file) != (unsigned long)*size){
         fprintf(stderr, "Error: Can not read input file.\n");
         fclose(file);
         exit(1);
