@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : tb_core.v
 //  Created On    : Sun Sep  6 22:43:11 2015
-//  Last Modified : Wed Sep 09 19:34:40 2015
+//  Last Modified : Sat Sep 12 21:24:12 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -39,11 +39,16 @@ module tb_core;
     wire            iport_error;
     wire            halted;
 
+    reg             rst_sync;
     //--------------------------------------------------------------------------
     // Assigns
     //--------------------------------------------------------------------------
     assign iport_error = 1'b0;          // No errors
     assign dport_error = 1'b0;          // No errors
+
+    always @(posedge clk_core) begin
+        rst_sync <= rst;
+    end
 
     //--------------------------------------------------------------------------
     // MIPS CORE
@@ -65,7 +70,7 @@ module tb_core;
                         .dport_enable   ( dport_enable        ),
                         // Inputs
                         .clk            ( clk_core            ),
-                        .rst            ( rst                 ),
+                        .rst            ( rst_sync            ),
                         .interrupts     ( 5'b0                ),    // No external interrupts.
                         .nmi            ( 1'b0                ),    // No external interrupts.
                         .iport_data_i   ( iport_data_i[31:0]  ),
@@ -86,7 +91,7 @@ module tb_core;
              )
              memory0(
                      .clk        ( clk_bus                             ),
-                     .rst        ( rst                                 ),
+                     .rst        ( rst_sync                            ),
                      .a_addr     ( iport_address[2 +: `MEM_ADDR_WIDTH] ),    // instruction port
                      .a_din      ( 32'hB00B_B00B                       ),
                      .a_wr       ( iport_wr[3:0]                       ),
