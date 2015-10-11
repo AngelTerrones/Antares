@@ -15,6 +15,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// Typedefs
+// -----------------------------------------------------------------------------
+typedef enum { false, true } bool;
+
 // Function declaration
 // -----------------------------------------------------------------------------
 void         help           (void);
