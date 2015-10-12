@@ -8,7 +8,7 @@ SHELL := bash
 # variables
 # must match the name on create_filelist script
 #-------------------------------------------------------------------------------
-.FILE_LIST     = build/filelist.prj
+.FILE_LIST     = out/filelist.prj
 .MEM_FILE_NAME = ../out/pmem.mem
 
 #-------------------------------------------------------------------------------
