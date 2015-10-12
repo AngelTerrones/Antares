@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : monitor.v
 //  Created On    : Wed Sep  9 19:00:41 2015
-//  Last Modified : Sat Sep 12 20:55:29 2015
+//  Last Modified : Sun Oct 11 20:04:56 2015
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -140,8 +140,10 @@ module monitor(
 
         begin
             file = $fopen(`REG_FILE, "w");
+            $display("INFO-MONITOR:\tRegister dump:");
             for(index = 1; index < 32; index = index + 1) begin
-                $fwrite(file, "R[%02d] = 0x%8h ( %d )\n", index, core.GPR.registers[index], core.GPR.registers[index]);
+                $fwrite(file, "R[%02d] = 0x%8h ( %d | %d )\n", index, core.GPR.registers[index], core.GPR.registers[index], $signed(core.GPR.registers[index]));
+                $display("\tR[%02d] = 0x%8h ( %d | %d )", index, core.GPR.registers[index], core.GPR.registers[index], $signed(core.GPR.registers[index]));
             end
             $display("INFO-MONITOR:\tRegister dump: DONE.");
             $fclose(file);
