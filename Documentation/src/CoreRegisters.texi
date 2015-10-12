@@ -1,0 +1,246 @@
+@c ****************************************************************************
+@c Core Registers
+@c ****************************************************************************
+@node Core Registers
+@chapter Core Registers
+@cindex Core Registers
+@anchor{#core-registers}
+
+This chapter describes all the registers inside the Antares core. All registers are 32-bit wide.
+
+@c -----------------------------
+@section General-Purpose Registers (GPR)
+
+This section list the 32 general-purpose registers.
+
+@multitable @columnfractions .2 .2 .6
+    @headitem Register Number    @tab Register Name @tab Description
+    @item @code{0}    @tab @code{zero}  @tab Always equal to zero.
+    @item @code{1}    @tab @code{at}    @tab Assembler temporary. Used by the assembler.
+    @item @code{2}    @tab @code{v0}    @tab Return value from a function call.
+    @item @code{3}    @tab @code{v1}    @tab Return value from a function call.
+    @item @code{4}    @tab @code{a0}    @tab First parameter for a function call.
+    @item @code{5}    @tab @code{a1}    @tab Second parameter for a function call.
+    @item @code{6}    @tab @code{a2}    @tab Third parameter for a function call.
+    @item @code{7}    @tab @code{a3}    @tab Fourth parameter for a function call.
+    @item @code{8}    @tab @code{t0}    @tab Temporary variable. Does not need to be preserved
+    @item @code{9}    @tab @code{t1}    @tab Temporary variable. Does not need to be preserved
+    @item @code{10}   @tab @code{t2}    @tab Temporary variable. Does not need to be preserved
+    @item @code{11}   @tab @code{t3}    @tab Temporary variable. Does not need to be preserved
+    @item @code{12}   @tab @code{t4}    @tab Temporary variable. Does not need to be preserved
+    @item @code{13}   @tab @code{t5}    @tab Temporary variable. Does not need to be preserved
+    @item @code{14}   @tab @code{t6}    @tab Temporary variable. Does not need to be preserved
+    @item @code{15}   @tab @code{t7}    @tab Temporary variable. Does not need to be preserved
+    @item @code{16}   @tab @code{s0}    @tab Function variable. Must be preserved.
+    @item @code{17}   @tab @code{s1}    @tab Function variable. Must be preserved.
+    @item @code{18}   @tab @code{s2}    @tab Function variable. Must be preserved.
+    @item @code{19}   @tab @code{s3}    @tab Function variable. Must be preserved.
+    @item @code{20}   @tab @code{s4}    @tab Function variable. Must be preserved.
+    @item @code{21}   @tab @code{s5}    @tab Function variable. Must be preserved.
+    @item @code{22}   @tab @code{s6}    @tab Function variable. Must be preserved.
+    @item @code{23}   @tab @code{s7}    @tab Function variable. Must be preserved.
+    @item @code{24}   @tab @code{t8}    @tab Temporary variable.
+    @item @code{25}   @tab @code{t9}    @tab Temporary variable.
+    @item @code{26}   @tab @code{k0}    @tab Kernel use register.
+    @item @code{27}   @tab @code{k1}    @tab Kernel use register.
+    @item @code{28}   @tab @code{gp}    @tab Global pointer.
+    @item @code{29}   @tab @code{sp}    @tab Stack pointer.
+    @item @code{30}   @tab @code{fp/s8} @tab Stack frame pointer, or subroutine variable.
+    @item @code{31}   @tab @code{ra}    @tab Return address of the last subroutine call.
+@end multitable
+
+@c -----------------------------
+@section Coprocessor 0 Registers
+
+This section list all the MIPS compatible status control registers implemented in the Antares core.
+
+@multitable @columnfractions .2 .3 .5
+    @headitem Register Number  @tab Register Name @tab Description
+    @item @code{8}  @tab @code{Bad Virtual Address (BadVAddr)}              @tab This register holds the address whose use led to and exception.
+    @item @code{9}  @tab @code{Count}                                       @tab This register provide a simple general-purpose interval timer that runs continuously and that can be programmed to interrupt. This is a 32-bit counter that counts up continually at the CPU's pipeline clock rate. When @code{Count}  reaches the maximum 32-bits unsigned value, it overflows quietly back to zero.
+    @item @code{11} @tab @code{Compare}                                     @tab This register provide a simple general-purpose interval timer that runs continuously and that can be programmed to interrupt. When the @code{Count} register increments to a value equal to @code{Compare}, the interrupt is raised. The interrupt remains asserted until cleared by a subsequent write to @code{Compare}.
+    @item @code{12} @tab @code{Status (SR)}                                 @tab This register holds the processor status.
+    @item @code{13} @tab @code{Cause}                                       @tab This register holds the exception cause.
+    @item @code{14} @tab @code{Exception Program Counter (EPC)}             @tab This register holds the address of the return point for the current exception.
+    @item @code{15} @tab @code{Processor ID (PRId)}                         @tab The Processor Identification register. Used to identify the CPU.
+    @item @code{16} @tab @code{Config}                                      @tab CPU Resource Information and Configuration.
+    @item @code{16} @tab @code{Config1}                                     @tab CPU Resource Information and Configuration 1.
+    @item @code{30} @tab @code{Error Exception Program Counter (ErrorEPC)}  @tab The read/write ErrorEPC register contains the virtual address at which instruction processing can resume after servicing an error.
+@end multitable
+
+@c -----------------------------
+@subsection Status Register (SR)
+
+Description of the coprocessor 0 Status Register. Unimplemented fields will always read as zero:
+
+@ftable @code
+    @item Status_CU_321[2:0] (bits 31-29)
+        Enable access control to coprocessors 3-1. Always zero.
+    @item Status_CU_0 (bit 28)
+        Enable access control to coprocessor 0.
+    @item Status_RP (bit 27)
+        Reduce power. CPU dependent. Always zero.
+    @item Status_FR (bit 26)
+        Mode switch: Set 1 to expose 32 double-sized floating point registers to software. Set 0 to make them act as pairs of 32-bit registers. Always zero.
+    @item Status_RE  (bit 25)
+        Reverse endianness in user mode. Always zero.
+    @item Status_MX (bit 24)
+        Enable for DSP or MDMX ASE instructions. Always zero.
+    @item Status_PX (bit 23)
+        Enable 64-bit instructions with 32-bit addressing. Always zero.
+    @item Status_BEV (bit 22)
+        Boot exception vectors: when @code{BEV} is 1, CPU uses the ROM (@code{kseg1}) space exception entry point (bootstrap). @code{BEV} is usually set to 0 in running systems.
+    @item Status_TS (bit 21)
+        TLB shutdown. Always zero.
+    @item Status_SR (bit 20)
+        A soft reset occurred. Always zero.
+    @item Status_NMI (bit 19)
+        A non-maskable interrupt occurred.
+    @item Status_RES[1:0] (bits 18-17)
+        Reserved. Always zero.
+    @item Status_HALT (bit 16)
+        Stop CPU. MSUB specific implementation.
+    @item Status_IM[7:0] (bits 15-8)
+        Interrupt mask.
+    @item Status_KX (bit 7)
+        Enable 64-bit address space in kernel mode.
+    @item Status_SX (bit 6)
+        Enable 64-bit address space in supervisor mode.
+    @item Status_UX (bit 5)
+        Enable 64-bit address space in user mode.
+    @item Status_KSU[1:0] (bits 4-3)
+        CPU privilege level: 0 for kernel, 1 for supervisor, 2 for user. Regardless of this setting, the CPU is in kernel mode whenever the @code{EXL} or @code{ERL} bits are set following an exception.
+        The Antares core does not implement the supervisor mode.
+    @item Status_ERL (bit 2)
+        Error level.
+    @item Status_EXL (bit 1)
+        Exception level.
+    @item Status_IE (bit 0)
+        Global interrupt enable. Note that @code{EXL} or @code{ERL} inhibit all interrupts, regardless.
+@end ftable
+
+@c -----------------------------
+@subsection Cause Register
+
+Description of the coprocessor 0 Cause Register. Unimplemented fields will always read as zero:
+
+@ftable @code
+    @item Cause_BD (bit 31)
+        Exception victim is in the delay slot.
+    @item Cause_CE[1:0] (bits 29-28)
+        Coprocessor error: unusable coprocessor.
+    @item Cause_IV (bit 23)
+        Write this bit to 1 to use a special exception entry point for interrupts.
+    @item Cause_WP (bit 22)
+        Enable watchpoints exception mode. Always zero.
+    @item Cause_IP[7:0] (bits 15-8)
+        Pending hardware interrupts.
+    @item Cause_ExcCode[4:0] (bits 6-2)
+        Exception code.
+@end ftable
+
+@c -----------------------------
+@subsection Processor Identification Register (PRId)
+
+Description of the coprocessor 0 Processor Identification Register. Read only registers:
+
+@ftable @code
+    @item ID_Options[7:0] (bits 31-24)
+        Company options. Always zero.
+    @item ID_CID[7:0] (bits 23-16)
+        Company ID. Always zero.
+    @item ID_PID[7:0] (bits 15-8)
+        CPU ID. Always zero.
+    @item ID_Rev[7:0] (bits 7-0)
+        Revision. Always zero.
+@end ftable
+
+@c -----------------------------
+@subsection Configuration Register (Config)
+
+Description of the coprocessor 0 Configuration Register. Read only registers:
+
+@ftable @code
+    @item Config_M (bit 31)
+        Continuation bit. Reads 1 if another configuration register is available.
+    @item Config_Impl[14:0] (bits 30-16)
+        Implementation-dependent configuration flags.
+    @item Config_BE (bit 15)
+        Endiannes. The Antares core us little endian.
+    @item Config_AT[1:0] (bits 14-13)
+        MIPS32 CPU.
+    @item Config_AR[2:0] (bits 12-10)
+        Architecture revision level: MIPS32 Release 1.
+    @item Config_MT[2:0] (bits 9-7)
+        MMU type: none.
+    @item Config_VI (bit 3)
+        Set 1 if the L1 I-cache is indexed and tagged with virtual (program) addresses. For this implementation, the L1 I-cache do not use virtual addresses.
+    @item Config_K0[2:0] (bits 2-0)
+        @code{kseg0} coherency algorithm: uncached, cached, implementation dependent.
+@end ftable
+
+@c -----------------------------
+@subsection Configuration Register 1 (Config1)
+
+Description of the coprocessor 0 Configuration Register 1. Read only registers:
+
+@ftable @code
+    @item Config1_M (bit 31)
+        Continuation bit.
+    @item Config1_MMU[5:0] (bits 30-25)
+        MMU size.
+    @item Config1_IS[2:0] (bits 24-22)
+        Number of cache index positions: 64 x 2^S.
+    @item Config1_IL[2:0] (bits 21-19)
+        Zero means no cache at all. Else, number of cache line size: 2^(L+1) bytes.
+    @item Config1_IA[2:0] (bits 18-16)
+        Cache associativity: (A + 1).
+    @item Config1_DS[2:0] (bits 15-13)
+        Number of cache index positions: 64 x 2^S.
+    @item Config1_DL[2:0] (bits 12-10)
+        Zero means no cache at all. Else, number of cache line size: 2^(L+1) bytes.
+    @item Config1_DA[2:0] (bits 9-7)
+        Cache associativity: (A + 1).
+    @item Config1_C2 (bit 6)
+        1 if the coprocessor 2 is implemented.
+    @item Config1_MD (bit 5)
+        1 if the MDMX ASE is implemented.
+    @item Config1_PC (bit 4)
+        There is at least one performance counter implemented.
+    @item Config1_WR (bit 3)
+        Reads 1 if the CPU has at least one watchpoint register.
+    @item Config1_CA (bit 2)
+        Reads 1 when the MIPS16e compressed-code instruction set is available.
+    @item Config1_EP (bit 1)
+        Reads 1 if an EJTAG debug unit is provided.
+    @item Config1_FP (bit 0)
+        A floating-point unit is attached.
+@end ftable
+
+@c -----------------------------
+@subsection Bad Virtual Address Register (BadVAddr)
+
+This register holds the address whose use led to an exception: it is set on an MMU-related exception, on an attempt by a user program to access addresses outside @code{kuseg}, or if an address is wrongly aligned. After any other exception it is undefined. This is not set after a bus error.
+
+@c -----------------------------
+@subsection Count/Compare Register
+
+These registers provide a simple general-purpose interval timer that runs continuously and that can be programmed to interrupt.
+
+@code{count} is a 32-bit counter that counts up continually at the CPU’s pipeline clock rate.
+
+When @code{count} reaches the maximum 32-bit unsigned value, it overflows quietly back to zero. You can read @code{count} to find the current "time". You can also write @code{count} at any time, but it is normal practice not to do so.
+
+@code{compare} is a 32-bit read/write register. When @code{count} increments to a value equal to @code{compare}, the interrupt is raised. The interrupt remains asserted until cleared by a subsequent write to @code{compare}.
+
+To produce a periodic interrupt, the interrupt handler should always increment @code{compare} by a fixed amount (not an increment to @code{count}, because the period would then get stretched slightly by interrupt latency). The software needs to check for the possibility that a late interrupt response might lead it to set @code{compare} to a value that @code{count} has already passed.
+
+@c -----------------------------
+@subsection Exception Program Counter
+
+This register holds the address of the return point for the current exception. The instruction causing (or suffering) the exception is at @code{EPC}.
+
+@c -----------------------------
+@subsection Error Register
+
+The read/write ErrorEPC register contains the virtual address at which instruction processing can resume after servicing an error, a reset or a non-maskable interrupt.

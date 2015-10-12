@@ -1,0 +1,184 @@
+@c ****************************************************************************
+@c Software Development Tools
+@c ****************************************************************************
+@node Software Development Tools
+@chapter Software Development Tools
+@cindex Software Development Tools
+@anchor{#software}
+
+This chapter describes the software used to test and develop code for the Antares core.
+
+The @url{../Software, Software} folder contains tools and libraries to develop code for the Antares core.
+
+The @url{../Simulation, Simulation} folder contains scripts needed to simulate the core using @url{http://iverilog.icarus.com/, Icarus Verilog}.
+
+@c -----------------------------
+@section MIPS Cross-compiler Toolchain (GCC)
+
+The easy way to get a MIPS cross-compiler toolchain is using the @url{https://sourcery.mentor.com/GNUToolchain/subscription3537?lite=MIPS, Mentor Graphics Sourcery CodeBench Lite for MIPS ELF}. This compiler is based on GCC, Binutils and Newlib.
+
+Or, if you prefer to create your own toolchain ("hard way"), you need to follow the instructions in @ref{Toolchain Instructions}.
+
+@c -----------------------------
+@node Toolchain Instructions
+@subsection Instructions for Creating a MIPS Compiler Toolchain
+
+These are instructions for creating a MIPS cross-compiler toolchain based on GCC, Binutils, and Newlib.
+
+@c -----------------
+@subsubsection Required Files
+
+The required files needed to build the MIPS cross-compiler (you can use updated versions of these files):
+
+@itemize @bullet
+    @item gcc-4.9.1.tar.bz2     : @url{http://gcc.gnu.org/mirrors.html}
+    @item binutils-2.24.tar.bz2 : @url{http://ftp.gnu.org/gnu/binutils/}
+    @item mpfr-3.1.2.tar.bz2    : @url{http://www.mpfr.org/mpfr-3.1.2/}
+    @item mpc-1.0.2.tar.gz      : @url{http://www.multiprecision.org/}
+    @item gmp-6.0.0a.tar.bz2    : @url{http://gmplib.org/}
+    @item newlib-2.1.0.tar.gz   : @url{ftp://sources.redhat.com/pub/newlib/index.html}
+@end itemize
+
+@c -----------------
+@subsubsection Environment Requirements
+
+@itemize @bullet
+    @item Linux, BSD, Cygwin, or another Unix-like environment.
+    @item Recent compiler tools (tested with GCC 4.8.2).
+    @item Bash or bask-like shell (or adjust the instructions below).
+@end itemize
+
+@c -----------------
+@subsubsection Building the Toolchain
+
+@itemize @bullet
+    @item Set environment variables:
+@example
+export TARGET=mips-elf
+export PREFIX=[any directory]/mips32/mips_tc
+export PATH=$PATH:$PREFIX/bin
+@end example
+    @item Unpack everything:
+@example
+bzip2 -dc binutils-2.24.tar.bz2 | tar xf -
+bzip2 -dc gcc-4.9.1.tar.bz2 | tar xf -
+bzip2 -dc mpfr-3.1.2.tar.bz2 | tar xf -
+bzip2 -dc gmp-6.0.0a.tar.bz2 | tar xf -
+gzip -dc mpc-1.0.2.tar.gz | tar xf -
+gzip -dc newlib-2.1.0.tar.gz | tar xf -
+@end example
+    @item Move (or symlink) GCC dependency packages:
+@example
+mv gmp-6.0.0 gcc-4.9.1/gmp
+mv mpc-1.0.2 gcc-4.9.1/mpc
+mv mpfr-3.1.2 gcc-4.9.1/mpfr
+mv newlib-2.1.0/newlib gcc-4.9.1/newlib
+mv newlib-2.1.0/libgloss gcc-4.9.1/libgloss
+@end example
+    @item Build binutils:
+@example
+mkdir binutils-build && cd binutils-build
+../binutils-2.24/configure --prefix=$PREFIX --target=$TARGET \
+    --disable-nls
+make
+make install
+cd ..
+@end example
+    @item build GCC:
+@example
+mkdir gcc-build && cd gcc-build
+../gcc-4.9.1/configure --prefix=$PREFIX --target=$TARGET \
+    --with-newlib  --without-headers --with-gnu-ld --with-gnu-as \
+    --disable-libssp --disable-nls --enable-c99 --enable-long-long \
+    --enable-languages=c
+make
+make install
+cd ..
+@end example
+@end itemize
+
+At this point you have a complete toolchain located at @code{$PREFIX}.
+
+@c -----------------------------
+@section Simulation
+
+The @url{../Simulation, Simulation} folder contains scripts needed to simulate the core.
+
+The folder layout:
+
+@itemize @bullet
+    @item bench: testbenchs for the core and SoC.
+    @item run: simulation makefile.
+    @item scripts: scripts to compile the core, and simulate it.
+    @item tests: demos written in assembler.
+@end itemize
+
+@subsection Run the simulation.
+
+To simulate the core, follow the makefile instructions:
+@itemize @bullet
+    @item Change directory to @code{<project directory>\Simulation\run}.
+    @item Execute @code{make} to get the help screen.
+@end itemize
+
+@subheading Make Help Screen
+
+The usage: @code{make TARGET VARIABLES}
+
+@subheading Make Targets
+
+@table @code
+    @item check
+        Check verilog files found in @code{Hardware} and @code{Simulation/bench/} directory.
+    @item list_asm_tests
+        List all assembler files inside the @code{Simulation/tests/asm/} folder.
+    @item list_c_tests
+        List all C projects inside the @code{Simulation/tests/c/} folder.
+    @item rtlsim
+        Simulates a single ASM test, and places all outputs (waveforms, regdump, logs) in Simulation/out folder
+    @item rtlsim-c
+        Simulates a single C test, and places all outputs (waveforms, regdump, logs)
+        in @code{Simulation/out} folder
+    @item rtlsim-all
+        Simulates all ASM tests, and places all outputs (waveforms, regdump, logs)
+        in @code{Simulation/out} folder
+    @item clean
+        Clean temporary files inside the @code{Simulation} folder.
+    @item distclean
+        Clean all temporary files (includes the @code{Software/utils} folder).
+@end table
+
+@subheading Make Variables
+
+@table @code
+    @item TB=<verilog testbench>
+        For @code{rtlsim} and @code{rtlsim-c} targets. Specifies the testbench file for simulation.
+    @item TEST=<ASM test>
+        For @code{rtlsim} and @code{rtlsim-c} targets. Specifies the assembler/C test.
+    @item MEM_SIZE=<memory size (bytes)>
+        For @code{rtlsim} and @code{rtlsim-c} targets. Specifies system memory.
+    @item DSEG_SIZE=<Data segment size>
+        For @code{rtlsim} and @code{rtlsim-c} targets. Specifies the size for the data segment.
+    @item TIMEOUT=<Simulation timeout>
+        For @code{rtlsim} and @code{rtlsim-c} targets.
+    @item DUMPVCD=<Generate waveform file>
+        For @code{rtlsim} and @code{rtlsim-c} targets. Enable the dump of variables to waveform file.
+@end table
+
+@subheading Make Examples
+Some examples, for each target:
+@example
+make
+make help
+make check
+make list_asm_tests
+make list_c_tests
+make rtlsim TB=tb_core TEST=<asm-test> MEM_SIZE=4096 DSEG_SIZE=1024 \
+    TIMEOUT=100000 DUMPVCD=0
+make rtlsim-c TB=tb_core TEST=<c-test> MEM_SIZE=4096 DSEG_SIZE=1024 \
+    TIMEOUT=100000 DUMPVCD=0
+make rtlsim-all TB=tb_core MEM_SIZE=4096 DSEG_SIZE=1024 TIMEOUT=100000 \
+    DUMPVCD=0
+make clean
+make distclean
+@end example

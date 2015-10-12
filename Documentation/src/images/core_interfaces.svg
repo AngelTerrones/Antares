@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   width="324.20978"
+   height="312.39536"
+   id="svg2"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="core_interfaces.svg">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1058"
+     id="namedview29"
+     showgrid="false"
+     inkscape:zoom="2.8617582"
+     inkscape:cx="119.64846"
+     inkscape:cy="156.19768"
+     inkscape:window-x="0"
+     inkscape:window-y="20"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg2" />
+  <defs
+     id="defs4" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="g3401">
+    <rect
+       width="323.48785"
+       height="311.73944"
+       x="0.36095276"
+       y="0.32403606"
+       id="rect3965"
+       style="fill:#00ffff;fill-opacity:1;stroke:#000000;stroke-width:0.64808106;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <g
+       id="g4329"
+       transform="translate(-218.75403,-286.3969)">
+      <rect
+         style="fill:#5fd38d;fill-opacity:1;stroke:#000000;stroke-width:0.79208112;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect3761-2-1"
+         transform="matrix(0,1,-1,0,0,0)"
+         y="-487.35458"
+         x="552.7406"
+         height="212.99135"
+         width="45.655617" />
+      <text
+         sodipodi:linespacing="125%"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:125%;font-family:'Latin Modern Sans Quotation';-inkscape-font-specification:'Latin Modern Sans Quotation';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+         xml:space="preserve"
+         id="text3815-3"
+         y="581.12842"
+         x="380.6853"><tspan
+           id="tspan4019"
+           y="581.12842"
+           x="380.6853">System Interface</tspan></text>
+    </g>
+    <text
+       sodipodi:linespacing="125%"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:125%;font-family:'Latin Modern Sans Quotation';-inkscape-font-specification:'Latin Modern Sans Quotation';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       xml:space="preserve"
+       id="text3755-15"
+       y="25.838593"
+       x="162.51991"><tspan
+         id="tspan3759-1"
+         y="25.838593"
+         x="162.51991">Antares</tspan></text>
+    <g
+       transform="translate(-223.41488,-217.85704)"
+       id="g4339">
+      <g
+         id="g4334"
+         transform="translate(-17.237569,-3.2833465)">
+        <rect
+           style="fill:#d35f5f;fill-opacity:1;stroke:#000000;stroke-width:0.65632588;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect2985"
+           y="264.19467"
+           x="318.64749"
+           height="204.33148"
+           width="167.92712" />
+        <text
+           sodipodi:linespacing="125%"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:125%;font-family:'Latin Modern Sans Quotation';-inkscape-font-specification:'Latin Modern Sans Quotation';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+           xml:space="preserve"
+           id="text3755"
+           y="373.09042"
+           x="402.81699"><tspan
+             id="tspan3759"
+             y="373.09042"
+             x="402.81699">CPU</tspan></text>
+      </g>
+      <rect
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.23295492;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect3870"
+         y="358.37311"
+         x="271.37689"
+         height="9.4079199"
+         width="29.767046" />
+      <rect
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.23295492;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect3870-6"
+         y="358.37311"
+         x="468.72726"
+         height="9.4079199"
+         width="29.767046" />
+      <g
+         id="g4319"
+         transform="translate(334.80979,-0.18237909)">
+        <rect
+           style="fill:#5fd38d;fill-opacity:1;stroke:#000000;stroke-width:0.76498157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           id="rect3761-2-3"
+           y="269.06277"
+           x="164.22546"
+           height="188.39334"
+           width="48.145229" />
+        <text
+           sodipodi:linespacing="125%"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:125%;font-family:'Latin Modern Sans Quotation';-inkscape-font-specification:'Latin Modern Sans Quotation';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+           xml:space="preserve"
+           id="text3755-1"
+           transform="matrix(0,-1,1,0,0,0)"
+           y="195.09808"
+           x="-364.02774"><tspan
+             id="tspan3811"
+             y="195.09808"
+             x="-364.02774">Instruction Port</tspan></text>
+      </g>
+      <g
+         id="g4324"
+         transform="translate(-350.86819,37.348047)">
+        <rect
+           style="fill:#5fd38d;fill-opacity:1;stroke:#000000;stroke-width:0.76498157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           id="rect3761-2"
+           y="231.53235"
+           x="574.72723"
+           height="188.39334"
+           width="48.145229" />
+        <text
+           sodipodi:linespacing="125%"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:125%;font-family:'Latin Modern Sans Quotation';-inkscape-font-specification:'Latin Modern Sans Quotation';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+           xml:space="preserve"
+           id="text3815"
+           transform="matrix(0,-1,1,0,0,0)"
+           y="605.53986"
+           x="-326.50729"><tspan
+             id="tspan3817"
+             y="605.53986"
+             x="-326.50729">Data Port</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>

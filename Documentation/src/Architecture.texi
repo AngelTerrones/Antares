@@ -1,0 +1,209 @@
+@c ****************************************************************************
+@c Architecture
+@c ****************************************************************************
+@node Architecture
+@chapter Architecture
+@cindex Architecture
+@anchor{#architecture}
+
+@c -----------------------------------------
+@section Introduction
+The Antares is a configurable 32-bit soft processor core with Harvard microarchitecture, 6-stage pipeline, compatible with the MIPS32 Release 1 processor.
+
+This chapter introduce the Antares architecture, and describes the general architecture features.
+
+@section Features
+
+The following lists the main features of Antares IP core:
+@itemize @bullet
+    @item Single-issue in-order 6-stage pipeline with full forwarding and hazard detection.
+    @item Harvard architecture, with separate instruction and data ports.
+    @item A subset of the MIPS32 instruction set. Includes: hardware multiplication, hardware division, MAC/MAS, load linked / store conditional.
+    @item Multi-cycle Hardware divider (Disabled by default).
+    @item Hardware multiplier (5-stages pipeline, disabled by default).
+    @item Hardware is Little-Endian.
+    @item Coprocessor 0 allows ISA-compliant interrupts, exceptions, and user/kernel modes.
+    @item Documentation in-source.
+    @item Vendor-independent code.
+@end itemize
+
+@c -----------------------------------------
+@section CPU
+
+This section describes the Antares core design structure. It consist of several building blocks:
+@itemize @bullet
+    @item Instruction Decode Unit.
+    @item Branch Unit.
+    @item General-Purpose Registers (GPR).
+    @item Integer Execution Unit (ALU).
+    @item Load/Store Unit (LSU).
+    @item Hazard and Forwarding Unit.
+    @item Exception Unit (Coprocessor 0).
+@end itemize
+
+As shown in the following figure, the Antares processor uses a 6-stage pipeline which is fully bypassed and interlocked. The bypass logic is responsible for forwarding results back through the pipeline, allowing most instructions to be effectively executed in a single cycle. The interlock is responsible for detecting read-after-write (RAW) hazards and stalling the pipeline until the hazard has been resolved, avoiding the need to insert @code{NOP} instructions between dependent instructions.
+
+@center @image{images/pipeline,,425pt,Antares Block Diagram, pdf}
+
+The six pipeline stages are:
+@itemize @bullet
+    @item Address (A): The address of the instruction to execute is calculated.
+    @item Fetch (IF): The Instruction is read from memory.
+    @item Decode (ID): The instruction is decoded and operands are either fetched from the register file, or bypassed from the pipeline. PC-relative branches are calculated here. Access to the coprocessor 0 is performed.
+    @item Execute (EX): The integer operation specified by the instruction is performed.
+    @item Memory (MEM): Memory access (load/store).
+    @item Write-back (WB): Result produced are written back to the register file.
+@end itemize
+
+@c -----------------------------
+@subsection Configuration
+
+It is possible to configure the Antares core using the following parameters (see @url{../Hardware_core.v, Hardware/antares_core.v}):
+@ftable @code
+    @item ENABLE_HW_MULT
+    Enable hardware support for multiplication instructions.
+    @item ENABLE_HW_DIV
+    Enable hardware support for division instructions.
+    @item ENABLE_HW_CLO_Z
+    Enable hardware support for the CLO and CLZ instructions.
+@end ftable
+
+@c -----------------------------
+@subsection Instruction Decode Unit
+
+This unit performs the instruction decode and generates all the processor control signals but those related with the pipeline control.
+
+This unit is implemented in @url{../Hardware_control_unit.v, Hardware/antares_control_unit.v}.
+
+@c -----------------------------
+@subsection Branch Unit
+
+This unit detects branch and jump instructions, and check if the branch should be taken.
+
+This unit is implemented in @url{../Hardware_branch_unit.v, Hardware/antares_branch_unit.v}
+
+@c -----------------------------
+@subsection General-Purpose Registers (GPR)
+Like the MIPS specification, the Antares core implements 32 general-purpose 32-bit registers.
+
+The Antares implements the general-purpose registers as one asynchronous dual-port memory.
+
+This unit is implemented in @url{../Hardware_reg_file.v, Hardware/antares_reg_file.v}
+
+@c -----------------------------
+@subsection Integer Execution Unit (ALU)
+
+The core implements the following types of 32-bits integer instructions:
+@itemize @bullet
+    @item Arithmetic instructions.
+    @item Logical instructions.
+    @item Compare instructions.
+    @item Shift instructions.
+@end itemize
+
+Most integer instructions can execute in one cycle. The exceptions are the multiplication and division instructions, if they are enabled. This unit is implemented in @url{../Hardware_alu.v,/Hardware/antares_alu.v}.
+
+The hardware multiplier is implemented as a 5-stage pipeline. This unit is implemented in @url{../Hardware_multiplier.v, Hardware/antares_multiplier.v}.
+
+The hardware divider is implemented as a FSM. This unit is implemented in @url{../Hardware_div.v, Hardware/antares_div.v}.
+
+@c -----------------------------
+@subsection Load/Store Unit (LSU)
+
+The load/store unit (LSU) transfers data between the core pipeline and the CPU internal bus. This unit will stall the master pipeline in case of data dependency.
+
+The main features:
+@itemize @bullet
+    @item Load and store implemented in hardware, atomic instructions included.
+    @item Aligned access for fast memory access.
+@end itemize
+
+This unit requires the following operands:
+@itemize @bullet
+    @item Address.
+    @item Source data (for store instructions).
+    @item Destination data (for load instructions).
+@end itemize
+
+This unit is implemented in @url{../Hardware_load_store_unit.v, Hardware/antares_load_store_unit.v}
+
+@c -----------------------------
+@subsection Hazard and Forwarding Unit
+
+The hazard and forwarding unit implements the logic that is responsible for forwarding results back through the pipeline, allowing most instructions to be effectively executed in a single cycle. Also, this unit checks for data dependency (hazards) and interlocks the pipeline pipeline until the hazard has been resolved, avoiding the need to insert @code{NOP} instructions between dependent instructions.
+
+This unit is implemented in @url{../Hardware_hazard_unit.v, Hardware/antares_hazard_unit.v}
+
+@c -----------------------------
+@subsection Exception Unit: Coprocessor 0
+
+This module allows interrupts, traps, system calls and other exceptions. This unit implements only a subset of the MIPS coprocessor 0.
+
+The supported exceptions sources:
+
+@ftable @code
+    @item EXC_AdEL
+    Address error on load. This is either and attempt to get outside of @code{kuseg} when in user mode, or an attempt to read a word or halfword at a misaligned address.
+    @item EXC_AdES
+    Address error on store. This is either and attempt to get outside of @code{kuseg} when in user mode, or an attempt to write a word or halfword at a misaligned address.
+    @item EXC_DBE
+    Data bus error.
+    @item EXC_Tr
+    Condition met on one of the conditional trap instructions.
+    @item EXC_Ov
+    Overflow from arithmetic instructions.
+    @item EXC_Sys
+    Executed a @code{syscall} instruction.
+    @item EXC_Bp
+    Executed a @code{break} instruction. Used by debuggers.
+    @item EXC_RI
+    Instruction code not recognized, or not legal.
+    @item EXC_CpU
+    Tried to run a coprocessor instruction, but the appropriate coprocessor is not enabled in @code{SR(CU3-0)}.
+    @item EXC_AdIF
+    Address error on instruction fetch. This is either and attempt to get outside of @code{kuseg} when in user mode, or an attempt to read a word or halfword at a misaligned
+    @item EXC_IBE
+    Instruction bus error.
+    @item EXC_Int
+    External interrupt.
+@end ftable
+
+The CPU Control Registers implemented in this core:
+
+@ftable @code
+    @item Status (SR)
+        This register holds the processor status.
+    @item Cause
+        This register holds the exception cause.
+    @item Processor ID (PRId)
+        The Processor Identification register. Used to identify the CPU.
+    @item Config
+        CPU Resource Information and Configuration.
+    @item Config1
+        CPU Resource Information and Configuration 1.
+    @item Bad Virtual Address (BadVAddr)
+        This register holds the address whose use led to and exception.
+    @item Count
+        This register provide a simple general-purpose interval timer that runs continuously and that can be programmed to interrupt. This is a 32-bit counter that counts up continually at the CPU's pipeline clock rate. When @code{Count} reaches the maximum 32-bits unsigned value, it overflows quietly back to zero.
+    @item Compare
+        This register provide a simple general-purpose interval timer that runs continuously and that can be programmed to interrupt. When the @code{Count} register increments to a value equal to @code{Compare}, the interrupt is raised. The interrupt remains asserted until cleared by a subsequent write to @code{Compare}.
+    @item Exception Program Counter (EPC)
+        This register holds the address of the return point for the current exception.
+    @item Error Exception Program Counter (ErrorEPC)
+        The read/write ErrorEPC register contains the virtual address at which instruction processing can resume after servicing an error.
+@end ftable
+
+This unit is implemented in @url{../Hardware_cpzero.v, Hardware/antares_cpzero.v}
+
+@c -----------------------------
+@subsection Memory Map
+
+Due to the lack of MMU, virtual addresses are equal to physical addresses. Also, Antares does not implement the standard MIPS memory map, instead, it divides the 4GB memory space into 3 regions:
+@ftable @code
+    @item Antares_SEG_0
+        Maps internal memory. Total size: 256 MB.
+    @item Antares_SEG_1
+        Maps IO devices. Total size: 256 MB.
+    @item Antares_SEG_2
+        Maps external memory. Total size: 3.5 GB.
+@end ftable

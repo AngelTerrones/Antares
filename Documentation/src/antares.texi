@@ -1,0 +1,100 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename antares.info
+@settitle The Antares processor
+@c %**end of header
+
+@documentencoding UTF-8
+
+@copying
+This file documents the Antares processor.
+
+Copyright @copyright{} 2015 Ángel Terrones
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the MIT License. A copy of the license is included
+in the section entitled ``MIT License''.
+
+@end copying
+
+@setchapternewpage on
+
+@syncodeindex fn cp
+@syncodeindex vr cp
+
+@titlepage
+@title The Antares processor
+@c @subtitle Reference manual
+@subtitle Preliminary Draft
+@subtitle @today{}
+@author Ángel Terrones
+@author (Universidad Simón Bolívar)
+@author (angelterrones@@gmail.com)
+
+@c  The following two commands
+@c  start the copyright page.
+@page
+@center @image{images/logo_antares,,90pt,Logo}
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@headings off
+@everyheading @thischapter @|  @| @thispage
+@everyfooting @thistitle @| @emph{Preliminary Draft} @| @today{}
+
+@paragraphindent 0
+
+@c ****************************************************************************
+@c ToC
+@c ****************************************************************************
+@c So the toc is printed at the start.
+@contents
+
+@c ****************************************************************************
+@c Top node
+@c ****************************************************************************
+@ifnottex
+@node Top
+@top Scope of this Document
+
+This document is the user guide for the Antares processor project.
+
+@end ifnottex
+
+@c ****************************************************************************
+@c Menu
+@c ****************************************************************************
+@menu
+* Introduction::
+* Architecture::
+* Core Operation::
+* Core Registers::
+* IO Ports::
+* Core Configuration::
+* Software Development Tools::
+* MIT License::                 The license for this project
+* Index::                       Complete index
+@end menu
+
+@c ****************************************************************************
+@c Document
+@c ****************************************************************************
+@include Introduction.texi
+@include Architecture.texi
+@include CoreOperation.texi
+@include CoreRegisters.texi
+@include IOPorts.texi
+@include CoreConfiguration.texi
+@include Software.texi
+@include MITLicense.texi
+
+
+@c ****************************************************************************
+@c Index
+@c ****************************************************************************
+@node Index
+@unnumbered Index
+@printindex cp
+
+@bye
