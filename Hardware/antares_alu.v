@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_alu.v
 //  Created On    : Thu Sep  3 09:14:03 2015
-//  Last Modified : Wed Sep 09 19:25:21 2015
+//  Last Modified : Mon Oct 12 10:27:38 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -77,6 +77,11 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
     wire               mult_signed_op;
     wire               mult_enable_op;
 
+    wire               _op_divs;
+    wire               _op_divu;
+    wire               _op_mults;
+    wire               _op_multu;
+
     wire [31:0]        shift_input_data;
     wire [4:0]         shift_shamnt;
     wire               shift_direction;
@@ -94,14 +99,19 @@ module antares_alu #(parameter ENABLE_HW_MULT = 1,
     assign add_sub_result     = ((ex_alu_operation == `ALU_OP_ADD) | (ex_alu_operation == `ALU_OP_ADDU)) ? (A + B) : (A - B);
     assign hi                 = hilo[63:32];
     assign lo                 = hilo[31:0];
-    assign enable_ex          = ~(ex_stall | ex_flush);
-    assign op_divs            = (B != 32'd0) & (div_active == 1'b0) & (ex_alu_operation == `ALU_OP_DIV) & enable_ex;
-    assign op_divu            = (B != 32'd0) & (div_active == 1'b0) & (ex_alu_operation == `ALU_OP_DIVU) & enable_ex;
-    assign op_mults           = (mult_active == 1'b0) & (ex_alu_operation == `ALU_OP_MULS) & enable_ex;
-    assign op_multu           = (mult_active == 1'b0) & (ex_alu_operation == `ALU_OP_MULU) & enable_ex;
-    //assign ex_request_stall   = ((op_divu | op_divs) | div_stall) | ((op_multu | op_mults) | (mult_active ^ mult_ready));
-    assign ex_request_stall   = (div_active | mult_ready) & hilo_access;
-    assign mult_stall         = ex_stall;
+    assign enable_ex          = ~((ex_stall ^ ex_request_stall) | ex_flush);
+    assign _op_divs           = (B != 32'd0) & (div_active == 1'b0) & (ex_alu_operation == `ALU_OP_DIV);
+    assign _op_divu           = (B != 32'd0) & (div_active == 1'b0) & (ex_alu_operation == `ALU_OP_DIVU);
+    assign _op_mults          = (mult_active == 1'b0) & (ex_alu_operation == `ALU_OP_MULS);
+    assign _op_multu          = (mult_active == 1'b0) & (ex_alu_operation == `ALU_OP_MULU);
+    assign op_divs            =  _op_divs & enable_ex;
+    assign op_divu            =  _op_divu & enable_ex;
+    assign op_mults           =  _op_mults & enable_ex;
+    assign op_multu           =  _op_multu & enable_ex;
+    // request stall if: division, multiplication, and device unit is busy.
+    // Do not use the op_XXX signal: combinatorial loop. So, this will stall the unit waiting for the instruction.
+    assign ex_request_stall   = (_op_divu | _op_divs | div_stall | _op_mults | _op_multu | (mult_active ^ mult_ready)) & hilo_access;
+    assign mult_stall         = ex_stall ^ex_request_stall;
     assign mult_input_a       = ex_alu_port_a[31:0];
     assign mult_input_b       = ex_alu_port_b[31:0];
     assign mult_signed_op     = ex_alu_operation == `ALU_OP_MULS;
