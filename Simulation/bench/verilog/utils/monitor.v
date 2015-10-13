@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : monitor.v
 //  Created On    : Wed Sep  9 19:00:41 2015
-//  Last Modified : Sun Oct 11 20:04:56 2015
+//  Last Modified : Mon Oct 12 19:55:30 2015
 //  Revision      : 0.1
 //  Author        : Ángel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -652,7 +652,7 @@ module monitor(
     // Start Simulation
     //--------------------------------------------------------------------------
     initial begin
-        $display("\n\n");
+        $display("");
         $display("--------------------------------------------------------------------------");
         $display("INFO-MONITOR:\tTesting the MIPS Core: BEGIN.");
         $display("--------------------------------------------------------------------------");
@@ -694,7 +694,7 @@ module monitor(
         $display("--------------------------------------------------------------------------");
         $display("INFO-MONITOR:\tTesting the MIPS Core: Aborted. Timeout after %0d cycles.", $time/`cycle);
         $display("--------------------------------------------------------------------------");
-        $display("\n\n");
+        $display("");
         $finish;
     end // initial begin
 
@@ -708,7 +708,7 @@ module monitor(
             $display("--------------------------------------------------------------------------");
             $display("INFO-MONITOR:\tTesting the MIPS Core: Finished after %0d cycles.", $time/`cycle);
             $display("--------------------------------------------------------------------------");
-            $display("\n\n");
+            $display("");
             $finish;
         end
     end // always @ (negedge clk_core)
