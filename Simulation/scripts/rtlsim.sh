@@ -17,7 +17,9 @@
 CURRENT_FOLDER="$(pwd)"
 PROJECT_ROOT="${CURRENT_FOLDER%/Simulation*}"
 OUT_FOLDER=$PROJECT_ROOT/Simulation/run/out
+ASM_FOLDER=$PROJECT_ROOT/Simulation/tests/asm
 TESTBENCH_FOLDER=$PROJECT_ROOT/Simulation/bench
+SCRIPT_FOLDER=$PROJECT_ROOT/Simulation/scripts
 
 #-------------------------------------------------------------------------------
 # Parameter Check
@@ -89,9 +91,6 @@ if !(vvp $1.vvp) then
     echo
     exit 1
 fi
-echo -e "--------------------------------------------------------------------------"
-echo -e "INFO:\tVerilog simulation: DONE."
-echo -e "--------------------------------------------------------------------------"
 
 #-------------------------------------------------------------------------------
 # Move log files
@@ -100,3 +99,15 @@ mkdir -p ${OUT_FOLDER}/log
 mv ${OUT_FOLDER}/register.log ${OUT_FOLDER}/log/$2-register.log
 mv ${OUT_FOLDER}/memory.log ${OUT_FOLDER}/log/$2-memory.log
 mv ${OUT_FOLDER}/trace.log ${OUT_FOLDER}/log/$2-trace.log
+
+#-------------------------------------------------------------------------------
+# Check result
+#-------------------------------------------------------------------------------
+${SCRIPT_FOLDER}/check_result.py ${OUT_FOLDER}/log/$2-register.log ${ASM_FOLDER}/$2.reg
+
+#-------------------------------------------------------------------------------
+# Show last message
+#-------------------------------------------------------------------------------
+echo -e "--------------------------------------------------------------------------"
+echo -e "INFO:\tVerilog simulation: DONE."
+echo -e "--------------------------------------------------------------------------"
