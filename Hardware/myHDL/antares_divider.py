@@ -31,8 +31,26 @@ def antares_divider(clk,
                     quotient,
                     remainder,
                     div_stall):
+    '''
+    Ports:
+
+    clk: system clock
+    rst: system reset
+    op_divs: signed division
+    op_divu: unsigned division
+    dividend: input data
+    divisor: input data
+    quotient: output result
+    remainder: output result
+    div_stall: unit is busy
+
+    WARNING: the op_divs/op_divu signal must be asserted only one cycle.
+    Keeping it asserted for more than one cycle will restart the operation.
+    The operation can be aborted by asserting the reset signal.
+    '''
     active = Signal(modbv(0)[1:])
     neg_result = Signal(modbv(0)[1:])
+    neg_remainder = Signal(modbv(0)[1:])
     cycle = Signal(modbv(0)[5:])
     result = Signal(modbv(0)[32:])
     denominator = Signal(modbv(0)[32:])
@@ -42,7 +60,7 @@ def antares_divider(clk,
     @always_comb
     def output():
         quotient.next = result if neg_result == 0 else -result
-        remainder.next = residual
+        remainder.next = residual if neg_remainder == 0 else -residual
         div_stall.next = active
         partial_sub.next = concat(residual[31:0], result[31]) - denominator
 
@@ -53,6 +71,7 @@ def antares_divider(clk,
             cycle.next = 0
             denominator.next = 0
             neg_result.next = 0
+            neg_remainder.next = 0
             residual.next = 0
             result.next = 0
         else:
@@ -62,6 +81,7 @@ def antares_divider(clk,
                 denominator.next = divisor if (divisor[31] == 0) else -divisor
                 residual.next = 0
                 neg_result.next = dividend[31] ^ divisor[31]
+                neg_remainder.next = dividend[31]
                 active.next = 1
             elif op_divu:
                 cycle.next = 31
@@ -69,6 +89,7 @@ def antares_divider(clk,
                 denominator.next = divisor
                 residual.next = 0
                 neg_result.next = 0
+                neg_remainder.next = 0
                 active.next = 1
             elif active:
                 if partial_sub[32] == 0:
@@ -88,6 +109,7 @@ def antares_divider(clk,
 
 def testbench():
     '''
+    Performs N signed/unsigned operations, using random inputs.
     '''
     clk = Signal(modbv(0)[1:])
     rst = Signal(modbv(1)[1:])
@@ -98,6 +120,7 @@ def testbench():
     quotient = Signal(modbv(0)[32:])
     remainder = Signal(modbv(0)[32:])
     div_stall = Signal(modbv(0)[1:])
+
     dut = antares_divider(clk, rst, op_divs, op_divu, dividend, divisor,
                           quotient, remainder, div_stall)
 
@@ -109,12 +132,13 @@ def testbench():
 
     @instance
     def stimulus():
-        yield delay(100)
+        yield delay(200)
         rst.next = 0
-        for i in range(3):
+        print("Testing unsigned division. Using 200 test cases")
+        for i in range(100):
             yield clk.negedge
-            dividend.next = Signal(modbv(random.randint(0, 2**8)))
-            divisor.next = Signal(modbv(random.randint(0, 2**8)))
+            dividend.next = Signal(modbv(random.randint(0, 2**32)))
+            divisor.next = Signal(modbv(random.randint(0, 2**32)))
             op_divu.next = 1
             yield clk.negedge
             op_divu.next = 0
@@ -122,13 +146,32 @@ def testbench():
             yield delay(10)
 
             # Verification
-            err1 = quotient != dividend // divisor + 1
-            err2 = remainder != dividend % divisor + 1
+            err1 = quotient != dividend // divisor
+            err2 = remainder != dividend % divisor
             if err1 or err2:
                 print("ERROR: {0}/{1} | Q: {2} | R: {3}".format(dividend,
                                                                 divisor,
                                                                 quotient,
                                                                 remainder))
+        print("Testing signed division. Using 200 test cases")
+        for i in range(200):
+            yield clk.negedge
+            dividend.next = Signal(modbv(random.randint(0, 2**32)))
+            divisor.next = Signal(modbv(random.randint(0, 2**32)))
+            op_divs.next = 1
+            yield clk.negedge
+            op_divs.next = 0
+            yield div_stall.negedge
+            yield delay(10)
+
+            # Verification
+            err1 = quotient.signed() != int(dividend.signed() / divisor.signed())
+            err2 = remainder.signed() != dividend.signed() - int(dividend.signed() / divisor.signed())*divisor.signed()
+            if err1 or err2:
+                print("ERROR: {0}/{1} | Q: {2} | R: {3}".format(dividend.signed(),
+                                                                divisor.signed(),
+                                                                quotient.signed(),
+                                                                remainder.signed()))
 
         print("Test: DONE.")
         raise StopSimulation
@@ -137,8 +180,9 @@ def testbench():
 
 
 def main():
-    sim = Simulation(traceSignals(testbench))
-    sim.run(10000)
+    # sim = Simulation(traceSignals(testbench))
+    sim = Simulation(testbench())
+    sim.run()
 
 
 if __name__ == '__main__':
