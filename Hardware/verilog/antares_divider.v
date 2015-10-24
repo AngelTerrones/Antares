@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_divider.v
 //  Created On    : Thu Sep  3 08:41:07 2015
-//  Last Modified : Fri Sep 04 11:13:22 2015
+//  Last Modified : Fri Oct 23 23:01:15 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -34,7 +34,8 @@ module antares_divider (/*AUTOARG*/
     // Signal Declaration: reg
     //--------------------------------------------------------------------------
     reg           active;          // 1 while running
-    reg           neg_result;      // 1 if the result will be negative
+    reg           neg_result;      // 1 if the result must be negative
+    reg           neg_remainder;   // 1 if the remainder must be negative
     reg [4:0]     cycle;           // number of cycles needed.
     reg [31:0]    result;          // Store the result.
     reg [31:0]    denominator;     // divisor
@@ -49,7 +50,7 @@ module antares_divider (/*AUTOARG*/
     // assignments
     //--------------------------------------------------------------------------
     assign quotient    = !neg_result ? result : -result;
-    assign remainder   = residual;
+    assign remainder   = !neg_remainder ? residual : -residual;
     assign div_stall   = active;
     assign partial_sub = {residual[30:0], result[31]} - denominator;            // calculate partial result
 
@@ -66,6 +67,7 @@ module antares_divider (/*AUTOARG*/
             cycle <= 5'h0;
             denominator <= 32'h0;
             neg_result <= 1'h0;
+            neg_remainder <= 1'h0;
             residual <= 32'h0;
             result <= 32'h0;
             // End of automatics
@@ -73,21 +75,23 @@ module antares_divider (/*AUTOARG*/
         else begin
             if(op_divs) begin
                 // Signed division.
-                cycle       <= 5'd31;
-                result      <= (dividend[31] == 1'b0) ? dividend : -dividend;
-                denominator <= (divisor[31] == 1'b0) ? divisor : -divisor;
-                residual    <= 32'b0;
-                neg_result  <= dividend[31] ^ divisor[31];
-                active      <= 1'b1;
+                cycle         <= 5'd31;
+                result        <= (dividend[31] == 1'b0) ? dividend : -dividend;
+                denominator   <= (divisor[31] == 1'b0) ? divisor : -divisor;
+                residual      <= 32'b0;
+                neg_result    <= dividend[31] ^ divisor[31];
+                neg_remainder <= dividend[31];
+                active        <= 1'b1;
             end
             else if (op_divu) begin
                 // Unsigned division.
-                cycle       <= 5'd31;
-                result      <= dividend;
-                denominator <= divisor;
-                residual    <= 32'b0;
-                neg_result  <= 1'b0;
-                active      <= 1'b1;
+                cycle         <= 5'd31;
+                result        <= dividend;
+                denominator   <= divisor;
+                residual      <= 32'b0;
+                neg_result    <= 1'b0;
+                neg_remainder <= 1'h0;
+                active        <= 1'b1;
             end
             else if (active) begin
                 // run a iteration
