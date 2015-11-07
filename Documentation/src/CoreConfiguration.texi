@@ -1,0 +1,18 @@
+@c ****************************************************************************
+@c Core Configuration
+@c ****************************************************************************
+@node Core Configuration
+@chapter Core Configuration
+@cindex Core Configuration
+@anchor{#core-configuration}
+
+This chapter describes parameters that are set by the user of the core and defines the configuration of the core.
+Parameters must be set by the user before actual use of the core in simulation or synthesis.
+
+@multitable @columnfractions .2 .1 .1 .6
+    @headitem Parameter Name @tab Range @tab Default @tab Description
+    @item @code{ENABLE_HW_MULT}  @tab 0-1 @tab 1 @tab Enable hardware support for multiplication instructions.
+    @item @code{ENABLE_HW_DIV}   @tab 0-1 @tab 1 @tab Enable hardware support for division instructions.
+    @item @code{ENABLE_HW_CLO_Z} @tab 0-1 @tab 1 @tab Enable hardware support for the CLO and CLZ instructions.
+@end multitable
+

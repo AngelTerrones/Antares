@@ -1,0 +1,77 @@
+###############################################################################
+# Filename      : boot.s
+# Created On    : 2015-04-12
+# Revision      : 0.1
+# Author        : Angel Terrones
+# Company       : Universidad Simón Bolívar
+# Email         : aterrones@usb.ve
+# Description   : Startup code
+#                 Includes the exception vector (@ 0x00000000) and the
+#                 interrupt vector (@0x00000008).
+#
+###############################################################################
+
+      .text
+      .balign     4
+
+# *************************************************
+# Exception vector.
+# DO NOT MODIFY
+# *************************************************
+      .ent        exception_vector
+      .set        noreorder
+exception_vector:
+      j           mips32_general_exception      # jump to exception routine (general exception)
+      nop
+      .end        exception_vector
+
+# *************************************************
+# Exception vector.
+# DO NOT MODIFY
+# *************************************************
+      .ent        interrupt_vector
+interrupt_vector:
+      j           mips32_interrupt_exception    # jump to exception routine (interrupts)
+      nop
+      .end        interrupt_vector
+
+# *************************************************
+# Boot code: Reset exception
+# This must be at 0x00000010 (reset boot address)
+# *************************************************
+      .ent        boot
+boot:
+      la          $t0, _bss_start         # Defined in linker script
+      la          $t1, _bss_end
+      la          $sp, _sp
+      la          $gp, _gp
+
+$bss_clear:
+      beq         $t0, $t1, $cp0_setup    # Loop until BSS is cleared
+      nop
+      sb          $0, 0($t0)
+      j           $bss_clear
+      addiu       $t0, $t0, 1             # Branch Delay Slot.
+
+$cp0_setup:
+      la          $26, $run               # Get the address
+      mtc0        $26, $30, 0             # ErrorEPC gets address of $run
+      mfc0        $26, $13, 0             # Load Cause register
+      lui         $27, 0x0080             # Use "special" interrupt vector
+      or          $26, $26, $27
+      mtc0        $26, $13, 0             # Commit new Cause register
+      mfc0        $26, $12, 0             # Load Status register
+      lui         $27, 0x0fff             # Disable access to Coprocessors
+      ori         $27, $27, 0x00ee        # Disable all interrupts,
+      and         $26, $26, $27           # Set kernel mode
+      mtc0        $26, $12, 0             # Commit new Status register
+      eret                                # Return from Reset Exception
+
+$run:
+      jal         main                    # Execute main function
+      nop
+
+$done:
+      j           $done                   # Loop (end of Main)
+      nop
+      .end        boot

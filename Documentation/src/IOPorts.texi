@@ -1,0 +1,72 @@
+@c ****************************************************************************
+@c IO Ports
+@c ****************************************************************************
+@node IO Ports
+@chapter IO Ports
+@cindex IO Ports
+@anchor{#io-ports}
+
+The Antares core have several interfaces:
+@itemize @bullet
+    @item Instruction interface.
+    @item Data interface.
+    @item Interrupts interface.
+    @item System interface.
+@end itemize
+
+@center @image{images/core_interfaces,,300pt,Antares interface, pdf}
+
+@c -----------------------------
+@section Instruction Interface
+
+This interface is used to connect the Antares core to the memory subsystem for the purpose of fetching instructions.
+
+@multitable @columnfractions .2 .15 .15 .5
+    @headitem Port @tab Width @tab Direction @tab Description
+    @item @code{iport_data_i}  @tab 32 @tab Input  @tab Data input
+    @item @code{iport_ready}   @tab 1  @tab Input  @tab Data ready
+    @item @code{iport_error}   @tab 1  @tab Input  @tab Bus error
+    @item @code{iport_address} @tab 32 @tab Output @tab Memory address
+    @item @code{iport_wr}      @tab 4  @tab Output @tab Byte select in write mode
+    @item @code{iport_enable}  @tab 1  @tab Output @tab Enable operation
+@end multitable
+
+@c -----------------------------
+@section Data Interface
+
+This interface is used to connect the Antares core to the memory subsystem for the purpose of reading and writing data.
+
+@multitable @columnfractions .2 .15 .15 .5
+    @headitem Port @tab Width @tab Direction @tab Description
+    @item @code{dport_data_i}  @tab 32 @tab Input  @tab Data input
+    @item @code{dport_ready}   @tab 1  @tab Input  @tab Data ready
+    @item @code{dport_error}   @tab 1  @tab Input  @tab Bus error
+    @item @code{dport_address} @tab 32 @tab Output @tab Memory address
+    @item @code{dport_data_o}  @tab 32 @tab Output @tab Data output
+    @item @code{dport_wr}      @tab 4  @tab Output @tab Byte select in write mode
+    @item @code{dport_enable}  @tab 1  @tab Output @tab Enable operation
+@end multitable
+
+@c -----------------------------
+@section Interrupts Interface
+
+Inputs for interfacing external peripheral's interrupt outputs to the Antares core.
+
+@multitable @columnfractions .2 .15 .15 .5
+    @headitem Port @tab Width @tab Direction @tab Description
+    @item @code{interrupts}    @tab 5  @tab Input  @tab External interrupts
+    @item @code{nmi}           @tab 1  @tab Input  @tab Non-maskable interrupt
+@end multitable
+
+@c -----------------------------
+@section System Interface
+
+Connects resert, clock and other system signals to the Antares core.
+
+@multitable @columnfractions .2 .15 .15 .5
+    @headitem Port @tab Width @tab Direction @tab Description
+    @item @code{clk}           @tab 1  @tab Input  @tab Main clock
+    @item @code{rst}           @tab 1  @tab Input  @tab Synchronous reset
+    @item @code{halted}        @tab 1  @tab Output @tab CP0 Status Register, bit 16. Stop mode
+@end multitable
+

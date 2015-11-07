@@ -1,0 +1,60 @@
+#############################################################################
+# Makefile for building assembler and c projects.
+# Target: The MUSB MIPS processor.
+#############################################################################
+
+MIPS_PREFIX  = %prefix%
+MIPS_BIN     = %bin%
+MIPS_BASE    = %base%
+MIPS_CC      = $(MIPS_PREFIX)gcc
+MIPS_AS      = $(MIPS_PREFIX)as
+MIPS_LD      = $(MIPS_PREFIX)ld
+MIPS_OBJDUMP = $(MIPS_PREFIX)objdump
+MIPS_OBJCOPY = $(MIPS_PREFIX)objcopy
+UTIL_PREFIX  = %util%
+UTIL_BIN2HEX = $(UTIL_PREFIX)/bin2hex
+UTIL_BIN2MEM = $(UTIL_PREFIX)/bin2mem
+
+AS_FLAGS      = -march=mips32 -EL -G0 --no-break
+LD_FLAGS      = -EL -static -T %linker%
+LD_LIBS       = -lm -lc -lgcc
+LD_SEARCH     = -L$(MIPS_BASE)/mips-sde-elf/lib -L$(MIPS_BASE)/lib/gcc/mips-sde-elf/4.9.2
+LD_DRIVER     = $(MIPS_LD) $(LD_FLAGS) $(LD_SEARCH) $(LD_LIBS)
+CC_FLAGS_ARCH = -march=mips32 -EL
+CC_FLAGS_LANG = -Wall -O%optlevel% -mgpopt -mxgot -G0
+CC_FLAGS_INC  = -Isrc/
+CC_FLAGS_AS   = -Wa,-EL,-mips32
+CC_FLAGS_LD   = -nostdlib -nostartfiles -static -T %linker%
+CC_DRIVER     = $(MIPS_CC) $(CC_FLAGS_ARCH) $(CC_FLAGS_LANG) $(CC_FLAGS_AS) $(CC_FLAGS_INC)
+
+SOURCES_C = $(wildcard src/*.c)
+SOURCES_S = $(wildcard src/*.s)
+OBJECTS = $(SOURCES_C:src/%.c=out/%.o) $(SOURCES_S:src/%.s=out/%.o)
+
+.PHONY: clean
+
+bin/%project%.bin: $(OBJECTS)
+	@mkdir -p bin
+	@$(LD_DRIVER) $^ -o bin/%project%
+	@$(MIPS_OBJDUMP) -EL --disassemble bin/%project% > bin/%project%.lst
+	@$(MIPS_OBJCOPY) -O binary -j .text  bin/%project% bin/%project%-code.bin
+	@$(MIPS_OBJCOPY) -O binary -j .data  bin/%project% bin/%project%-data1.bin
+	@$(MIPS_OBJCOPY) -O binary -j .sdata bin/%project% bin/%project%-data2.bin
+	@$(MIPS_OBJCOPY) -O binary -j .sbss  bin/%project% bin/%project%-data3.bin
+	@$(MIPS_OBJCOPY) -O binary -j .bss   bin/%project% bin/%project%-data4.bin
+	@cat bin/%project%-data1.bin bin/%project%-data2.bin bin/%project%-data3.bin bin/%project%-data4.bin > bin/%project%-data.bin
+	@rm bin/%project%-data1.bin bin/%project%-data2.bin bin/%project%-data3.bin bin/%project%-data4.bin bin/%project%
+	@$(UTIL_BIN2MEM) -d %datasegbegin% bin/%project%-code.bin bin/%project%-data.bin bin/%project%.bin
+	@$(UTIL_BIN2HEX) -p %padsize% bin/%project%.bin bin/%project%.mem
+	@rm bin/%project%-data.bin bin/%project%-code.bin
+
+out/%.o: src/%.c
+	@mkdir -p out
+	@$(CC_DRIVER) -c $^ -o $@
+
+out/%.o: src/%.s
+	@mkdir -p out
+	@$(MIPS_AS) $(AS_FLAGS) $^ -o $@
+
+clean:
+	rm -rf *.o *.bin *.lst out bin/*

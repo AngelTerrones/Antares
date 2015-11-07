@@ -1,0 +1,257 @@
+@c ****************************************************************************
+@c Core Operation
+@c ****************************************************************************
+@node Core Operation
+@chapter Core Operation
+@cindex Core Operation
+@anchor{#core-operation}
+
+This chapter describes the operation of the Antares core.
+
+@c -----------------------------
+@section Reset
+
+The Antares core has one synchronous reset signal.
+
+The following image shows the Antares reset sequence. The reset signal is connected to the synchronous reset of all the flip-flops inside the Antares core.
+
+@center @image{images/reset,,48pt,Antares reset sequence, pdf}
+
+@c -----------------------------
+@section Core
+
+The core implements a subset of the MIPS32 Release 1 architecture.
+
+@c -------------------------
+@subsection Instruction Set
+
+The following list all the instructions implemented by Antares:
+
+@ftable @code
+    @item ADD
+        Add Word
+    @item ADDI
+        Add Immediate Word
+    @item ADDIU
+        Add Immediate Unsigned Word
+    @item ADDU
+        Add Unsigned Word
+    @item AND
+        And
+    @item ANDI
+        And Immediate
+    @item BEQ
+        Branch on Equal
+    @item BGEZ
+        Branch on Greater Than or Equal to Zero
+    @item BGEZAL
+        Branch on Greater Than or Equal to Zero and Link
+    @item BGTZ
+        Branch on Greater Than Zero
+    @item BLEZ
+        Branch on Less Than or Equal to Zero
+    @item BLTZ
+        Branch on Less Than Zero
+    @item BLTZAL
+        Branch on Less Than Zero and Link
+    @item BNE
+        Branch on Not Equal
+    @item BREAK
+        Breakpoint
+    @item CLO
+        Count Leading Ones in Word
+    @item CLZ
+        Count Leading Zeros in Word
+    @item DIV
+        Divide Word
+    @item DIVU
+        Divide Unsigned Word
+    @item ERET
+        Exception Return
+    @item J
+        Jump
+    @item JAL
+        Jump and Link
+    @item JALR
+        Jump and Link Register
+    @item JR
+        Jump Register
+    @item LB
+        Load Byte
+    @item LBU
+        Load Byte Unsigned
+    @item LH
+        Load Halfword
+    @item LHU
+        Load Halfword Unsigned
+    @item LL
+        Load Linked Word
+    @item LUI
+        Load Upper Immediate
+    @item LW
+        Load Word
+    @item MADD
+        Multiply and Add Word to Hi, Lo
+    @item MADDU
+        Multiply and Add Unsigned Word to Hi,Lo
+    @item MFC0
+        Move from Coprocessor 0
+    @item MFHI
+        Move From HI Register
+    @item MFLO
+        Move From LO Register
+    @item MOVN
+        Move Conditional on Not Zero
+    @item MOVZ
+        Move Conditional on Zero
+    @item MSUB
+        Multiply and Subtract Word to Hi, Lo
+    @item MSUBU
+        Multiply and Subtract Word to Hi,Lo
+    @item MTC0
+        Move to Coprocessor 0
+    @item MTHI
+        Move to HI Register
+    @item MTLO
+        Move to LO Register
+    @item MULT
+        Multiply Word
+    @item MULTU
+        Multiply Unsigned Word
+    @item NOR
+        Not Or
+    @item OR
+        Or
+    @item ORI
+        Or Immediate
+    @item SB
+        Store Byte
+    @item SC
+        Store Conditional Word
+    @item SH
+        Store Halfword
+    @item SLL
+        Shift Word Left Logical
+    @item SLLV
+        Shift Word Left Logical Variable
+    @item SLT
+        Set on Less Than
+    @item SLTI
+        Set on Less Than Immediate
+    @item SLTIU
+        Set on Less Than Immediate Unsigned
+    @item SLTU
+        Set on Less Than Unsigned
+    @item SRA
+        Shift Word Right Arithmetic
+    @item SRAV
+        Shift Word Right Arithmetic Variable
+    @item SRL
+        Shift Word Right Logical
+    @item SRLV
+        Shift Word Right Logical Variable
+    @item SUB
+        Subtract Word
+    @item SUBU
+        Subtract Unsigned Word
+    @item SW
+        Store Word
+    @item SYSCALL
+        System Call
+    @item TEQ
+        Trap if Equal
+    @item TEQI
+        Trap if Equal Immediate
+    @item TGE
+        Trap if Greater or Equal
+    @item TGEI
+        Trap if Greater or Equal Immediate
+    @item TGEIU
+        Trap if Greater or Equal Immediate Unsigned
+    @item TGEU
+        Trap if Greater or Equal Unsigned
+    @item TLT
+        Trap if Less Than
+    @item TLTI
+        Trap if Less Than Immediate
+    @item TLTIU
+        Trap if Less Than Immediate Unsigned
+    @item TLTU
+        Trap if Less Than Unsigned
+    @item TNE
+        Trap if Not Equal
+    @item TNEI
+        Trap if Not Equal Immediate
+    @item XOR
+        Exclusive OR
+    @item XORI
+        Exclusive OR Immediate
+@end ftable
+
+@c -------------------------
+@subsection Branch Unit
+
+This unit detects branch and jump instructions, and check if the branch should be taken.
+
+The following image shows the operation of the branch unit.
+
+@center @image{images/Branch,,180pt,Branch unit, pdf}
+
+@c -------------------------
+@subsection General-Purpose Registers (GPR)
+
+General-Purpose register file can supply two read operands each clock cycle and store one result in a destination register.
+
+@c -------------------------
+@subsection Integer Execution Unit (ALU)
+
+The core implements the following types of 32-bits integer instructions:
+@itemize @bullet
+    @item Arithmetic instructions.
+    @item Logical instructions.
+    @item Compare instructions.
+    @item Shift instructions.
+@end itemize
+
+Most integer instructions can execute in one cycle. The exceptions are the multiplication and division instructions, as it can be seen in the following table:
+
+@multitable @columnfractions .5 .5
+    @headitem Instruction Group @tab Clock cycles to execute
+    @item Arithmetic except multiply/divide @tab 1
+    @item Multiply                          @tab 5
+    @item Divide                            @tab 34
+    @item Compare                           @tab 1
+    @item Logical                           @tab 1
+    @item Shift                             @tab 1
+@end multitable
+
+The following image shows the operation of the multiplication and division hardware.
+@center @image{images/alu_mult_div, , 275pt, Multiplier/Divider, pdf}
+
+@c -------------------------
+@subsection Load/Store Unit (LSU)
+
+The load/store unit (LSU) transfers data between the core pipeline and the CPU internal bus. This unit will stall the master pipeline in case of data dependency.
+
+The LSU can execute one load instruction every two clock cycle. Execution of store instructions takes two clock cycle. But if the memory system (or the interconnect) use a clock with double frequency (as can be seen in the next figure), load/store instructions can take one clock.
+
+The following image shows the operation of this unit.
+@center @image{images/lsu, , 147.5pt, Load/Store Unit, pdf}
+
+As can be seen in the previous figure, the enable signal is asserted while the ready signal from the bus is not asserted. The ready signal keeps asserted through one bus clock cycle because the enable signal is asynchronous and the ready signal is synchronous.
+
+@c -------------------------
+@subsection Hazard and Forwarding Unit
+
+The hazard and forwarding unit implements the logic that is responsible for forwarding results back through the pipeline, allowing most instructions to be effectively executed in a single cycle. Also, this unit checks for data dependency (hazards) and interlocks the pipeline until the hazard has been resolved, avoiding the need to insert @code{NOP} instructions between dependent instructions.
+
+@c -------------------------
+@subsection Exception Unit: Coprocessor 0
+
+The core implements a precise exception model. This means that when an exception is taken, the following conditions are met:
+
+@itemize @bullet
+    @item Subsequent instructions in program flow are discarded.
+    @item Previous instructions finish and write back their results.
+    @item The address of the offended instruction is stored in the @code{EPC} (or @code{ErrorEPC} in case of reset or NMI).
+@end itemize
