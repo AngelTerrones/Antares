@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_alu.v
 //  Created On    : Thu Sep  3 09:14:03 2015
-//  Last Modified : Mon Oct 12 10:27:38 2015
+//  Last Modified : Sat Nov 07 11:45:51 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -19,26 +19,20 @@
 
 module antares_alu #(parameter ENABLE_HW_MULT = 1,
                      parameter ENABLE_HW_DIV  = 1,
-                     parameter ENABLE_HW_CLOZ = 1)
-    (/*AUTOARG*/
-    // Outputs
-    ex_request_stall, ex_alu_result, ex_b_is_zero, exc_overflow,
-    // Inputs
-    clk, rst, ex_alu_port_a, ex_alu_port_b, ex_alu_operation, ex_stall,
-    ex_flush
-    );
-
-    input              clk;
-    input              rst;
-    input [31:0]       ex_alu_port_a;
-    input [31:0]       ex_alu_port_b;
-    input [4:0]        ex_alu_operation;
-    input              ex_stall;
-    input              ex_flush;
-    output             ex_request_stall;
-    output reg [31:0]  ex_alu_result;
-    output             ex_b_is_zero;
-    output reg         exc_overflow;
+                     parameter ENABLE_HW_CLOZ = 1
+                     )(
+                       input             clk,
+                       input             rst,
+                       input [31:0]      ex_alu_port_a,
+                       input [31:0]      ex_alu_port_b,
+                       input [4:0]       ex_alu_operation,
+                       input             ex_stall,
+                       input             ex_flush,
+                       output            ex_request_stall,
+                       output reg [31:0] ex_alu_result,
+                       output            ex_b_is_zero,
+                       output reg        exc_overflow
+                       );
 
     //--------------------------------------------------------------------------
     // Signal Declaration: reg

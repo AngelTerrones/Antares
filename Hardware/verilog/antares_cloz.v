@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_cloz.v
 //  Created On    : Thu Sep  3 16:03:13 2015
-//  Last Modified : Thu Sep 03 16:10:44 2015
+//  Last Modified : Sat Nov 07 11:49:40 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -10,16 +10,11 @@
 //  Description   : Count leading ones/zeros unit.
 //==================================================================================================
 
-module antares_cloz (/*AUTOARG*/
-    // Outputs
-    clo_result, clz_result,
-    // Inputs
-    A
-    ) ;
-
-    input [31:0]  A;
-    output [5:0] clo_result;
-    output [5:0] clz_result;
+module antares_cloz (
+                     input [31:0] A,
+                     output [5:0] clo_result,
+                     output [5:0] clz_result
+                     );
 
     /*AUTOREG*/
     // Beginning of automatic regs (for this module's undeclared outputs)

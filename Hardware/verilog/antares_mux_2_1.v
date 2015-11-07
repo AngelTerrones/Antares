@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_mux_2_1.v
 //  Created On    : Mon Aug 31 21:12:26 2015
-//  Last Modified : Thu Sep 03 08:58:15 2015
+//  Last Modified : Sat Nov 07 12:13:45 2015
 //  Revision      : 0.1
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -11,17 +11,12 @@
 //==================================================================================================
 
 module antares_mux_2_1 #(parameter WIDTH = 32)
-    (/*AUTOARG*/
-    // Outputs
-    out,
-    // Inputs
-    in0, in1, select
+    (
+     input [WIDTH-1:0]      in0,
+     input [WIDTH-1:0]      in1,
+     input                  select,
+     output reg [WIDTH-1:0] out
     );
-
-    input [WIDTH-1:0]      in0;
-    input [WIDTH-1:0]      in1;
-    input                  select;
-    output reg [WIDTH-1:0] out;
 
     always @(/*AUTOSENSE*/in0 or in1 or select) begin
         case (select)
