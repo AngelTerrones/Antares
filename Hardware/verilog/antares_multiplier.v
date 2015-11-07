@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_multiplier.v
 //  Created On    : Wed Sep  2 22:05:36 2015
-//  Last Modified : Fri Sep 04 11:11:05 2015
+//  Last Modified : Sat Nov 07 12:11:51 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -11,24 +11,19 @@
 //                  For signed operations: invert, perform unsigned mult, set result sign.
 //==================================================================================================
 
-module antares_multiplier(/*AUTOARG*/
-    // Outputs
-    mult_result, mult_active, mult_ready,
-    // Inputs
-    clk, rst, mult_input_a, mult_input_b, mult_signed_op, mult_enable_op, mult_stall, flush
-    );
-
-    input         clk;                   // clock
-    input         rst;                   // reset
-    input [31:0]  mult_input_a;          // Data
-    input [31:0]  mult_input_b;          // Data
-    input         mult_signed_op; // Unsigned (0) or signed operation (1)
-    input         mult_enable_op;        // Signal a valid operation
-    input         mult_stall;                 // Freeze the pipeline
-    input         flush;                 // Flush the pipeline
-    output [63:0] mult_result;           // Result
-    output        mult_active;           // Active operations @ pipeline
-    output        mult_ready;            // Valid data on output port (result)
+module antares_multiplier(
+                          input         clk,            // clock
+                          input         rst,            // reset
+                          input [31:0]  mult_input_a,   // Data
+                          input [31:0]  mult_input_b,   // Data
+                          input         mult_signed_op, // Unsigned (0) or signed operation (1)
+                          input         mult_enable_op, // Signal a valid operation
+                          input         mult_stall,     // Freeze the pipeline
+                          input         flush,          // Flush the pipeline
+                          output [63:0] mult_result,    // Result
+                          output        mult_active,    // Active operations @ pipeline
+                          output        mult_ready      // Valid data on output port (result)
+                          );
 
     //--------------------------------------------------------------------------
     // Signal Declaration: reg

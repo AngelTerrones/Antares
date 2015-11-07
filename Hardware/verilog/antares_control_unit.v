@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_control_unit.v
 //  Created On    : Fri Sep  4 11:55:21 2015
-//  Last Modified : Sun Sep 06 11:21:02 2015
+//  Last Modified : Sat Nov 07 11:53:12 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -13,56 +13,45 @@
 `include "antares_defines.v"
 
 module antares_control_unit #(parameter ENABLE_HW_MULT = 1, // Enable multiply instructions
-                              parameter ENABLE_HW_DIV = 1, // Enable div instructions
-                              parameter ENABLE_HW_CLOZ = 1) // Enable CL=/CLZ instructions
-    (/*AUTOARG*/
-    // Outputs
-    dp_hazard, id_imm_sign_ext, id_movn, id_movz, id_llsc, id_syscall,
-    id_breakpoint, id_reserved, id_mfc0, id_mtc0, id_eret, id_cp1_instruction,
-    id_cp2_instruction, id_cp3_instruction, id_id_exception_source,
-    id_ex_exception_source, id_mem_exception_source, id_trap, id_trap_condition,
-    id_gpr_we, id_mem_to_gpr_select, id_alu_operation, id_alu_port_a_select,
-    id_alu_port_b_select, id_gpr_wa_select, id_jump, id_branch, id_mem_write,
-    id_mem_byte, id_mem_halfword, id_mem_data_sign_ext,
-    // Inputs
-    opcode, op_function, op_rs, op_rt
-    );
-
-    input [5:0]  opcode;                  // The instruction opcode
-    input [5:0]  op_function;             // For RR-type instruction
-    input [4:0]  op_rs;                   // For mtc0 and mfc0 instructions
-    input [4:0]  op_rt;                   // For branch instructions
-    output [7:0] dp_hazard;
-    output       id_imm_sign_ext;         // sign extend the imm16
-    output       id_movn;                 // MOVN instruction
-    output       id_movz;                 // MOVZ instruction
-    output       id_llsc;                 // LL/SC instructions
-    output       id_syscall;              // Syscall exception
-    output       id_breakpoint;           // Breakpoint exception
-    output       id_reserved;             // Reserved instruction exception
-    output       id_mfc0;                 // Coprocessor 0 instruction
-    output       id_mtc0;                 // Coprocessor 0 instruction
-    output       id_eret;                 // Coprocessor 0 instruction
-    output       id_cp1_instruction;      // Coprocessor 1 instruction
-    output       id_cp2_instruction;      // Coprocessor 2 instruction
-    output       id_cp3_instruction;      // Coprocessor 3 instruction
-    output       id_id_exception_source;  // Instruction is a potential source of exception
-    output       id_ex_exception_source;  // Instruction is a potential source of exception
-    output       id_mem_exception_source; // Instruction is a potential source of exception
-    output       id_trap;                 // Trap instruction
-    output       id_trap_condition;       // Trap condition
-    output       id_gpr_we;               // write data from WB stage, to GPR
-    output       id_mem_to_gpr_select;    // Select GPR write data: MEM or ALU
-    output [4:0] id_alu_operation;        // ALU function
-    output [1:0] id_alu_port_a_select;    // Shift, jump and link
-    output [1:0] id_alu_port_b_select;    // R-instruction, I-instruction or jump
-    output [1:0] id_gpr_wa_select;        // Select GPR write address
-    output       id_jump;                 // Jump instruction
-    output       id_branch;               // Branch instruction
-    output       id_mem_write;            // Write to Memory: 0 = read, 1 = write.
-    output       id_mem_byte;             // Read/Write one byte
-    output       id_mem_halfword;         // Read/Write halfword (16 bits)
-    output       id_mem_data_sign_ext;    // Sign extend for byte/halfword memory operations
+                              parameter ENABLE_HW_DIV = 1,  // Enable div instructions
+                              parameter ENABLE_HW_CLOZ = 1  // Enable CL=/CLZ instructions
+                              )(
+                                input [5:0]  opcode,                  // The instruction opcode
+                                input [5:0]  op_function,             // For RR-type instruction
+                                input [4:0]  op_rs,                   // For mtc0 and mfc0 instructions
+                                input [4:0]  op_rt,                   // For branch instructions
+                                output [7:0] dp_hazard,
+                                output       id_imm_sign_ext,         // sign extend the imm16
+                                output       id_movn,                 // MOVN instruction
+                                output       id_movz,                 // MOVZ instruction
+                                output       id_llsc,                 // LL/SC instructions
+                                output       id_syscall,              // Syscall exception
+                                output       id_breakpoint,           // Breakpoint exception
+                                output       id_reserved,             // Reserved instruction exception
+                                output       id_mfc0,                 // Coprocessor 0 instruction
+                                output       id_mtc0,                 // Coprocessor 0 instruction
+                                output       id_eret,                 // Coprocessor 0 instruction
+                                output       id_cp1_instruction,      // Coprocessor 1 instruction
+                                output       id_cp2_instruction,      // Coprocessor 2 instruction
+                                output       id_cp3_instruction,      // Coprocessor 3 instruction
+                                output       id_id_exception_source,  // Instruction is a potential source of exception
+                                output       id_ex_exception_source,  // Instruction is a potential source of exception
+                                output       id_mem_exception_source, // Instruction is a potential source of exception
+                                output       id_trap,                 // Trap instruction
+                                output       id_trap_condition,       // Trap condition
+                                output       id_gpr_we,               // write data from WB stage, to GPR
+                                output       id_mem_to_gpr_select,    // Select GPR write data: MEM or ALU
+                                output [4:0] id_alu_operation,        // ALU function
+                                output [1:0] id_alu_port_a_select,    // Shift, jump and link
+                                output [1:0] id_alu_port_b_select,    // R-instruction, I-instruction or jump
+                                output [1:0] id_gpr_wa_select,        // Select GPR write address
+                                output       id_jump,                 // Jump instruction
+                                output       id_branch,               // Branch instruction
+                                output       id_mem_write,            // Write to Memory: 0 = read, 1 = write.
+                                output       id_mem_byte,             // Read/Write one byte
+                                output       id_mem_halfword,         // Read/Write halfword (16 bits )
+                                output       id_mem_data_sign_ext     // Sign extend for byte/halfword memory operations
+                                );
 
     //--------------------------------------------------------------------------
     // Signal Declaration: reg

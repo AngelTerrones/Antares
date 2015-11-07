@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_divider.v
 //  Created On    : Thu Sep  3 08:41:07 2015
-//  Last Modified : Fri Oct 23 23:01:15 2015
+//  Last Modified : Sat Nov 07 12:01:42 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -13,22 +13,17 @@
 //                  WARNING: no exception if divisor == 0.
 //==================================================================================================
 
-module antares_divider (/*AUTOARG*/
-    // Outputs
-    quotient, remainder, div_stall,
-    // Inputs
-    clk, rst, op_divs, op_divu, dividend, divisor
-    );
-
-    input         clk;
-    input         rst;
-    input         op_divs;
-    input         op_divu;
-    input [31:0]  dividend;
-    input [31:0]  divisor;
-    output [31:0] quotient;
-    output [31:0] remainder;
-    output        div_stall;
+module antares_divider (
+                        input         clk,
+                        input         rst,
+                        input         op_divs,
+                        input         op_divu,
+                        input [31:0]  dividend,
+                        input [31:0]  divisor,
+                        output [31:0] quotient,
+                        output [31:0] remainder,
+                        output        div_stall
+                        );
 
     //--------------------------------------------------------------------------
     // Signal Declaration: reg

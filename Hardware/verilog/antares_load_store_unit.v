@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_load_store_unit.v
 //  Created On    : Sat Sep  5 10:38:09 2015
-//  Last Modified : Sat Sep 05 18:46:56 2015
+//  Last Modified : Sat Nov 07 12:09:07 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -24,58 +24,47 @@
 
 `include "antares_defines.v"
 
-module antares_load_store_unit (/*AUTOARG*/
-    // Outputs
-    imem_data, dmem_data_o, iport_address, iport_wr, iport_enable,
-    dport_address, dport_data_o, dport_wr, dport_enable, exc_address_if,
-    exc_address_l_mem, exc_address_s_mem, imem_request_stall,
-    dmem_request_stall,
-    // Inputs
-    clk, rst, imem_address, dmem_address, dmem_data_i, dmem_halfword, dmem_byte,
-    dmem_read, dmem_write, dmem_sign_extend, iport_data_i, iport_ready,
-    iport_error, dport_data_i, dport_ready, dport_error, exception_ready,
-    mem_kernel_mode, mem_llsc, id_eret
-    );
-
-    input             clk;                // Clock
-    input             rst;                // Reset
-    // Instruction interface: LSU <-> CPU
-    input [31:0]      imem_address;       // Instruction address
-    output reg [31:0] imem_data;          // Instruction data
-    // MEM interface: LSU <-> CPU
-    input [31:0]      dmem_address;       // Data address
-    input [31:0]      dmem_data_i;        // Data to memory
-    input             dmem_halfword;      // halfword access
-    input             dmem_byte;          // byte access
-    input             dmem_read;          // read data memory
-    input             dmem_write;         // write data memory
-    input             dmem_sign_extend;   // read data (byte/half) with sign extended
-    output reg [31:0] dmem_data_o;        // data from memory
-    // Instruction Port: LSU <-> MEM[instruction]
-    input [31:0]      iport_data_i;       // Data from memory
-    input             iport_ready;        // memory is ready
-    input             iport_error;        // Bus error
-    output [31:0]     iport_address;      // data address
-    output [3:0]      iport_wr;           // write = byte select, read = 0000,
-    output            iport_enable;       // enable operation
-    // Data Port : LSU <-> (MEM[data]; I/O)
-    input [31:0]      dport_data_i;       // Data from memory
-    input             dport_ready;        // memory is ready
-    input             dport_error;        // Bus error
-    output [31:0]     dport_address;      // data address
-    output [31:0]     dport_data_o;       // data to memory
-    output reg [3:0]  dport_wr;           // write = byte select, read = 0000,
-    output            dport_enable;       // enable operation
-    // pipeline signals
-    input             exception_ready;
-    input             mem_kernel_mode;    // For exception logic
-    input             mem_llsc;           // Atomic operation
-    input             id_eret;            // for llsc1
-    output            exc_address_if;     // panic
-    output            exc_address_l_mem;  // panic
-    output            exc_address_s_mem;  // panic
-    output            imem_request_stall; // long operation
-    output            dmem_request_stall; // long operation
+module antares_load_store_unit (
+                                input             clk,                // Clock
+                                input             rst,                // Reset
+                                // Instruction interface: LSU <-> CPU
+                                input [31:0]      imem_address,       // Instruction address
+                                output reg [31:0] imem_data,          // Instruction data
+                                // MEM interface: LSU <-> CPU
+                                input [31:0]      dmem_address,       // Data address
+                                input [31:0]      dmem_data_i,        // Data to memory
+                                input             dmem_halfword,      // halfword access
+                                input             dmem_byte,          // byte access
+                                input             dmem_read,          // read data memory
+                                input             dmem_write,         // write data memory
+                                input             dmem_sign_extend,   // read data (byte/half) with sign extended
+                                output reg [31:0] dmem_data_o,        // data from memory
+                                // Instruction Port: LSU <-> MEM[instruction]
+                                input [31:0]      iport_data_i,       // Data from memory
+                                input             iport_ready,        // memory is ready
+                                input             iport_error,        // Bus error
+                                output [31:0]     iport_address,      // data address
+                                output [3:0]      iport_wr,           // write = byte select, read = 0000,
+                                output            iport_enable,       // enable operation
+                                // Data Port : LSU <-> (MEM[data],    I/O)
+                                input [31:0]      dport_data_i,       // Data from memory
+                                input             dport_ready,        // memory is ready
+                                input             dport_error,        // Bus error
+                                output [31:0]     dport_address,      // data address
+                                output [31:0]     dport_data_o,       // data to memory
+                                output reg [3:0]  dport_wr,           // write = byte select, read = 0000,
+                                output            dport_enable,       // enable operation
+                                // pipeline signals
+                                input             exception_ready,
+                                input             mem_kernel_mode,    // For exception logic
+                                input             mem_llsc,           // Atomic operation
+                                input             id_eret,            // for llsc1
+                                output            exc_address_if,     // panic
+                                output            exc_address_l_mem,  // panic
+                                output            exc_address_s_mem,  // panic
+                                output            imem_request_stall, // long operation
+                                output            dmem_request_stall  // long operation
+                                );
 
     //--------------------------------------------------------------------------
     // wire and registers

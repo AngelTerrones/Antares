@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_core.v
 //  Created On    : Sat Sep  5 21:45:33 2015
-//  Last Modified : Wed Sep 09 23:01:57 2015
+//  Last Modified : Sat Nov 07 11:56:09 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -14,37 +14,30 @@
 
 module antares_core #(parameter ENABLE_HW_MULT = 1,
                       parameter ENABLE_HW_DIV = 1,
-                      parameter ENABLE_HW_CLOZ = 1)
-    (/*AUTOARG*/
-    // Outputs
-    halted, iport_address, iport_wr, iport_enable, dport_address, dport_data_o,
-    dport_wr, dport_enable,
-    // Inputs
-    clk, rst, interrupts, nmi, iport_data_i, iport_ready, iport_error,
-    dport_data_i, dport_ready, dport_error
-    );
-
-    input         clk;
-    input         rst;
-    output        halted;        // CP0 Status Register, bit 16
-                                 // Interrupts
-    input [4:0]   interrupts;    // External interrupts
-    input         nmi;           // Non-maskable interrupt
-                                 // External Instruction Memory/Instruction Cache
-    input [31:0]  iport_data_i;  // Data from memory
-    input         iport_ready;   // memory is ready
-    input         iport_error;   // Bus error
-    output [31:0] iport_address; // data address
-    output [3:0]  iport_wr;      // write = byte select, read = 0000,
-    output        iport_enable;  // enable operation
-                                 // External Data Memory/Data Cache
-    input [31:0]  dport_data_i;  // Data from memory
-    input         dport_ready;   // memory is ready
-    input         dport_error;   // Bus error
-    output [31:0] dport_address; // data address
-    output [31:0] dport_data_o;  // data to memory
-    output [3:0]  dport_wr;      // write = byte select, read = 0000,
-    output        dport_enable;  // enable operation
+                      parameter ENABLE_HW_CLOZ = 1
+                      )(
+                        input         clk,
+                        input         rst,
+                        output        halted, // CP0 Status Register, bit 16
+                        // Interrupts
+                        input [4:0]   interrupts, // External interrupts
+                        input         nmi, // Non-maskable interrupt
+                        // External Instruction Memory/Instruction Cache
+                        input [31:0]  iport_data_i, // Data from memory
+                        input         iport_ready, // memory is ready
+                        input         iport_error, // Bus error
+                        output [31:0] iport_address, // data address
+                        output [3:0]  iport_wr, // write = byte select, read = 0000,
+                        output        iport_enable, // enable operation
+                        // External Data Memory/Data Cache
+                        input [31:0]  dport_data_i, // Data from memory
+                        input         dport_ready, // memory is ready
+                        input         dport_error, // Bus error
+                        output [31:0] dport_address, // data address
+                        output [31:0] dport_data_o, // data to memory
+                        output [3:0]  dport_wr, // write = byte select, read = 0000,
+                        output        dport_enable   // enable operation
+                        );
 
     /*AUTOWIRE*/
     // Beginning of automatic wires (for undeclared instantiated-module outputs)

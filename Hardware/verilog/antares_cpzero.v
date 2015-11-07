@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_cpzero.v
 //  Created On    : Sat Sep  5 18:48:44 2015
-//  Last Modified : Sun Sep 06 00:48:47 2015
+//  Last Modified : Sat Nov 07 11:59:09 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -15,80 +15,65 @@
 
 `include "antares_defines.v"
 
-module antares_cpzero (/*AUTOARG*/
-    // Outputs
-    cp0_data_output, id_kernel_mode, halt, if_exception_stall,
-    id_exception_stall, ex_exception_stall, mem_exception_stall, if_flush,
-    id_flush, ex_flush, mem_flush, exception_ready, exception_pc_select,
-    pc_exception,
-    // Inputs
-    clk, mfc0, mtc0, eret, cp1_instruction, cp2_instruction, cp3_instruction,
-    register_address, select, data_input, if_stall, id_stall, interrupts, rst,
-    exc_nmi, exc_address_if, exc_address_l_mem, exc_address_s_mem,
-    exc_ibus_error, exc_dbus_error, exc_overflow, exc_trap, exc_syscall,
-    exc_breakpoint, exc_reserved, id_exception_pc, ex_exception_pc,
-    mem_exception_pc, bad_address_if, bad_address_mem, id_exception_source,
-    ex_exception_source, mem_exception_source, id_is_flushed, if_is_bds,
-    id_is_bds, ex_is_bds, mem_is_bds
-    );
-
-    input             clk;
-    // CP0
-    input             mfc0;             // mfc0 instruction
-    input             mtc0;             // mtc0 instruction
-    input             eret;             // eret instruction
-    input             cp1_instruction;  // Instruction for co-processor 1 (invalid for now)
-    input             cp2_instruction;  // Instruction for co-processor 2 (invalid for now)
-    input             cp3_instruction;  // Instruction for co-processor 3 (invalid for now)
-    input [4:0]       register_address; // CP0 Register
-    input [2:0]       select;           // Select register
-    input [31:0]      data_input;       // Input data (write)
-    input             if_stall;         // Can not write to CP0 if IF/ID is stalled
-    input             id_stall;         // Can not write to CP0 if IF/ID is stalled
-    output reg [31:0] cp0_data_output;  // Output data (read)
-    output            id_kernel_mode;      // Kernel mode: 0 Kernel, 1 User
-    // Hardware/External Interrupts
-    input [4:0]       interrupts;        // Up to 5 external interrupts
-    // exceptions
-    input             rst;               // External reset
-    input             exc_nmi;           // Non-maskable interrupt
-    input             exc_address_if;    // Address error: IF stage
-    input             exc_address_l_mem; // Address error: MEM stage, load instruction
-    input             exc_address_s_mem; // Address error: MEM stage, store instruction
-    input             exc_ibus_error;    // Instruction Bus Error
-    input             exc_dbus_error;    // Data Bus Error
-    input             exc_overflow;      // Integer overflow: EX stage
-    input             exc_trap;          // Trap exception
-    input             exc_syscall;       // System call
-    input             exc_breakpoint;    // Breakpoint
-    input             exc_reserved;      // Reserved Instruction
-    // exception data
-    input [31:0]      id_exception_pc;      // Exception PC @ ID stage
-    input [31:0]      ex_exception_pc;      // Exception PC @ EX stage
-    input [31:0]      mem_exception_pc;     // Exception PC @ MEM stage
-    input [31:0]      bad_address_if;       // Bad address that caused the exception
-    input [31:0]      bad_address_mem;      // Bad address that caused the exception
-    input             id_exception_source;  // Instruction @ ID stage is a potential source of exception
-    input             ex_exception_source;  // Instruction @ EX stage is a potential source of exception
-    input             mem_exception_source; // Instruction @ MEM stage is a potential source of exception
-    input             id_is_flushed;        // BDS for ERET instruction
-    input             if_is_bds;            // Instruction at this stage is a Branch Delay Slot
-    input             id_is_bds;            // Instruction at this stage is a Branch Delay Slot
-    input             ex_is_bds;            // Instruction at this stage is a Branch Delay Slot
-    input             mem_is_bds;           // Instruction at this stage is a Branch Delay Slot
-    // pipeline control
-    output            halt;                // Halt the processor.
-    output            if_exception_stall;  // Stall pipeline: exception and wait for a clean pipeline
-    output            id_exception_stall;  // Stall pipeline: exception and wait for a clean pipeline
-    output            ex_exception_stall;  // Stall pipeline: exception and wait for a clean pipeline
-    output            mem_exception_stall; // Stall pipeline: exception and wait for a clean pipeline
-    output            if_flush;  // Flush the pipeline: exception.
-    output            id_flush;  // Flush the pipeline: exception.
-    output            ex_flush;  // Flush the pipeline: exception.
-    output            mem_flush; // Flush the pipeline: exception.
-    output            exception_ready;
-    output            exception_pc_select; // Select the PC from CP0
-    output reg [31:0] pc_exception;        // Address for the new PC (exception/return from exception)
+module antares_cpzero (
+                       input             clk,
+                       // CP0
+                       input             mfc0,                 // mfc0 instruction
+                       input             mtc0,                 // mtc0 instruction
+                       input             eret,                 // eret instruction
+                       input             cp1_instruction,      // Instruction for co-processor 1 (invalid for now)
+                       input             cp2_instruction,      // Instruction for co-processor 2 (invalid for now)
+                       input             cp3_instruction,      // Instruction for co-processor 3 (invalid for now)
+                       input [4:0]       register_address,     // CP0 Register
+                       input [2:0]       select,               // Select register
+                       input [31:0]      data_input,           // Input data (write)
+                       input             if_stall,             // Can not write to CP0 if IF/ID is stalled
+                       input             id_stall,             // Can not write to CP0 if IF/ID is stalled
+                       output reg [31:0] cp0_data_output,      // Output data (read)
+                       output            id_kernel_mode,       // Kernel mode: 0 Kernel, 1 User
+                       // Hardware/External Interrupts
+                       input [4:0]       interrupts,           // Up to 5 external interrupts
+                       // exceptions
+                       input             rst,                  // External reset
+                       input             exc_nmi,              // Non-maskable interrupt
+                       input             exc_address_if,       // Address error: IF stage
+                       input             exc_address_l_mem,    // Address error: MEM stage, load instruction
+                       input             exc_address_s_mem,    // Address error: MEM stage, store instruction
+                       input             exc_ibus_error,       // Instruction Bus Error
+                       input             exc_dbus_error,       // Data Bus Error
+                       input             exc_overflow,         // Integer overflow: EX stage
+                       input             exc_trap,             // Trap exception
+                       input             exc_syscall,          // System call
+                       input             exc_breakpoint,       // Breakpoint
+                       input             exc_reserved,         // Reserved Instruction
+                       // exception data
+                       input [31:0]      id_exception_pc,      // Exception PC @ ID stage
+                       input [31:0]      ex_exception_pc,      // Exception PC @ EX stage
+                       input [31:0]      mem_exception_pc,     // Exception PC @ MEM stage
+                       input [31:0]      bad_address_if,       // Bad address that caused the exception
+                       input [31:0]      bad_address_mem,      // Bad address that caused the exception
+                       input             id_exception_source,  // Instruction @ ID stage is a potential source of exception
+                       input             ex_exception_source,  // Instruction @ EX stage is a potential source of exception
+                       input             mem_exception_source, // Instruction @ MEM stage is a potential source of exception
+                       input             id_is_flushed,        // BDS for ERET instruction
+                       input             if_is_bds,            // Instruction at this stage is a Branch Delay Slot
+                       input             id_is_bds,            // Instruction at this stage is a Branch Delay Slot
+                       input             ex_is_bds,            // Instruction at this stage is a Branch Delay Slot
+                       input             mem_is_bds,           // Instruction at this stage is a Branch Delay Slot
+                       // pipeline control
+                       output            halt,                 // Halt the processor.
+                       output            if_exception_stall,   // Stall pipeline: exception and wait for a clean pipeline
+                       output            id_exception_stall,   // Stall pipeline: exception and wait for a clean pipeline
+                       output            ex_exception_stall,   // Stall pipeline: exception and wait for a clean pipeline
+                       output            mem_exception_stall,  // Stall pipeline: exception and wait for a clean pipeline
+                       output            if_flush,             // Flush the pipeline: exception.
+                       output            id_flush,             // Flush the pipeline: exception.
+                       output            ex_flush,             // Flush the pipeline: exception.
+                       output            mem_flush,            // Flush the pipeline: exception.
+                       output            exception_ready,
+                       output            exception_pc_select,  // Select the PC from CP0
+                       output reg [31:0] pc_exception          // Address for the new PC (exception/return from exception)
+                       );
 
     //--------------------------------------------------------------------------
     // Internal wires/registers

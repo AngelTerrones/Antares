@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_shifter.v
 //  Created On    : Wed Sep  2 09:04:04 2015
-//  Last Modified : Wed Sep 09 23:08:05 2015
+//  Last Modified : Sat Nov 07 12:16:18 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -11,18 +11,13 @@
 //                  WARNING: shift_shamnt range is 0 -> 31
 //==================================================================================================
 
-module antares_shifter (/*AUTOARG*/
-    // Outputs
-    shift_result,
-    // Inputs
-    shift_input_data, shift_shamnt, shift_direction, shift_sign_extend
-    );
-
-    input [31:0]  shift_input_data;  // Input data
-    input [4:0]   shift_shamnt;      // Shift amount
-    input         shift_direction;   // 0: right, 1: left
-    input         shift_sign_extend; // 1: Signed operation
-    output [31:0] shift_result;      // Result
+module antares_shifter (
+                        input [31:0]  shift_input_data,  // Input data
+                        input [4:0]   shift_shamnt,      // Shift amount
+                        input         shift_direction,   // 0: right, 1: left
+                        input         shift_sign_extend, // 1: Signed operation
+                        output [31:0] shift_result       // Result
+                        );
 
     //-------------------------------------------------------------------------
     // Signal Declaration: reg

@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_hazard_unit.v
 //  Created On    : Fri Sep  4 22:32:20 2015
-//  Last Modified : Sat Sep 05 10:35:54 2015
+//  Last Modified : Sat Nov 07 12:03:58 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -12,48 +12,38 @@
 
 `include "antares_defines.v"
 
-module antares_hazard_unit (/*AUTOARG*/
-    // Outputs
-    forward_id_rs, forward_id_rt, forward_ex_rs, forward_ex_rt, if_stall,
-    id_stall, ex_stall, mem_stall, wb_stall,
-    // Inputs
-    DP_Hazards, id_rs, id_rt, ex_rs, ex_rt, ex_gpr_wa, mem_gpr_wa, wb_gpr_wa,
-    ex_gpr_we, mem_gpr_we, wb_gpr_we, mem_mem_write, mem_mem_read,
-    ex_request_stall, dmem_request_stall, imem_request_stall,
-    if_exception_stall, id_exception_stall, ex_exception_stall,
-    mem_exception_stall
-    );
-
-    input [7:0]  DP_Hazards;          //
-    input [4:0]  id_rs;               // Rs @ ID stage
-    input [4:0]  id_rt;               // Rt @ ID stage
-    input [4:0]  ex_rs;               // Rs @ EX stage
-    input [4:0]  ex_rt;               // Rt @ EX stage
-    input [4:0]  ex_gpr_wa;           // Write Address @ EX stage
-    input [4:0]  mem_gpr_wa;          // Write Address @ MEM stage
-    input [4:0]  wb_gpr_wa;           // Write Address @ WB stage
-    input        ex_gpr_we;           // GPR write enable @ EX
-    input        mem_gpr_we;          // GPR write enable @ MEM
-    input        wb_gpr_we;           // GPR write enable @ WB
-    input        mem_mem_write;       //
-    input        mem_mem_read;        //
-    input        ex_request_stall;    // Ex unit request a stall
-    input        dmem_request_stall;  // LSU: stall for Data access
-    input        imem_request_stall;  // LSU: stall for Instruction Fetch
-    input        if_exception_stall;  // Stall waiting for possible exception
-    input        id_exception_stall;  // Stall waiting for possible exception
-    input        ex_exception_stall;  // Stall waiting for possible exception
-    input        mem_exception_stall; //
-    output [1:0] forward_id_rs;       // Forwarding Rs multiplexer: Selector @ ID
-    output [1:0] forward_id_rt;       // Forwarding Rt multiplexer: Selector @ ID
-    output [1:0] forward_ex_rs;       // Forwarding Rs multiplexer: Selector @ EX
-    output [1:0] forward_ex_rt;       // Forwarding Rt multiplexer: Selector @ EX
-    output       if_stall;            // Stall pipeline register
-    output       id_stall;            // Stall pipeline register
-    output       ex_stall;            // Stall pipeline register
-    //output       ex_stall_unit;       // Stall the EX unit.
-    output       mem_stall;           // Stall pipeline register
-    output       wb_stall;            // Stall pipeline register
+module antares_hazard_unit (
+                            input [7:0]  DP_Hazards,          //
+                            input [4:0]  id_rs,               // Rs @ ID stage
+                            input [4:0]  id_rt,               // Rt @ ID stage
+                            input [4:0]  ex_rs,               // Rs @ EX stage
+                            input [4:0]  ex_rt,               // Rt @ EX stage
+                            input [4:0]  ex_gpr_wa,           // Write Address @ EX stage
+                            input [4:0]  mem_gpr_wa,          // Write Address @ MEM stage
+                            input [4:0]  wb_gpr_wa,           // Write Address @ WB stage
+                            input        ex_gpr_we,           // GPR write enable @ EX
+                            input        mem_gpr_we,          // GPR write enable @ MEM
+                            input        wb_gpr_we,           // GPR write enable @ WB
+                            input        mem_mem_write,       //
+                            input        mem_mem_read,        //
+                            input        ex_request_stall,    // Ex unit request a stall
+                            input        dmem_request_stall,  // LSU: stall for Data access
+                            input        imem_request_stall,  // LSU: stall for Instruction Fetch
+                            input        if_exception_stall,  // Stall waiting for possible exception
+                            input        id_exception_stall,  // Stall waiting for possible exception
+                            input        ex_exception_stall,  // Stall waiting for possible exception
+                            input        mem_exception_stall, //
+                            output [1:0] forward_id_rs,       // Forwarding Rs multiplexer: Selector @ ID
+                            output [1:0] forward_id_rt,       // Forwarding Rt multiplexer: Selector @ ID
+                            output [1:0] forward_ex_rs,       // Forwarding Rs multiplexer: Selector @ EX
+                            output [1:0] forward_ex_rt,       // Forwarding Rt multiplexer: Selector @ EX
+                            output       if_stall,            // Stall pipeline register
+                            output       id_stall,            // Stall pipeline register
+                            output       ex_stall,            // Stall pipeline register
+                            //output       ex_stall_unit;     // Stall the EX unit.
+                            output       mem_stall,           // Stall pipeline register
+                            output       wb_stall             // Stall pipeline register
+                            );
 
     //--------------------------------------------------------------------------
     // Signal Declaration: wire

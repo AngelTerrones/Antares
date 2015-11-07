@@ -1,7 +1,7 @@
 //==================================================================================================
 //  Filename      : antares_branch_unit.v
 //  Created On    : Fri Sep  4 21:35:54 2015
-//  Last Modified : Fri Sep 04 22:05:07 2015
+//  Last Modified : Sat Nov 07 11:49:10 2015
 //  Revision      : 1.0
 //  Author        : Angel Terrones
 //  Company       : Universidad Simón Bolívar
@@ -12,20 +12,15 @@
 
 `include "antares_defines.v"
 
-module antares_branch_unit (/*AUTOARG*/
-    // Outputs
-    pc_branch_address, id_take_branch,
-    // Inputs
-    opcode, id_pc_add4, id_data_rs, id_data_rt, op_imm26
-    ) ;
-
-    input [5:0]       opcode;            // Instruction opcode
-    input [31:0]      id_pc_add4;        // Instruction address + 4
-    input [31:0]      id_data_rs;        // Data from R0
-    input [31:0]      id_data_rt;        // Data from R1
-    input [25:0]      op_imm26;          // imm21/Imm16
-    output reg [31:0] pc_branch_address; // Destination address
-    output reg        id_take_branch;    // Valid branch
+module antares_branch_unit (
+                            input [5:0]       opcode,            // Instruction opcode
+                            input [31:0]      id_pc_add4,        // Instruction address + 4
+                            input [31:0]      id_data_rs,        // Data from R0
+                            input [31:0]      id_data_rt,        // Data from R1
+                            input [25:0]      op_imm26,          // imm21/Imm16
+                            output reg [31:0] pc_branch_address, // Destination address
+                            output reg        id_take_branch     // Valid branch
+                            ) ;
 
     //--------------------------------------------------------------------------
     // Signal Declaration: wire
