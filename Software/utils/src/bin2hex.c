@@ -14,10 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-// Typedefs
-// -----------------------------------------------------------------------------
-typedef enum { false, true } bool;
+#include <stdbool.h>
 
 // Function declaration
 // -----------------------------------------------------------------------------
